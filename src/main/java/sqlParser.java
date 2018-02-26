@@ -646,6 +646,7 @@ public class sqlParser extends Parser {
 
 	public static class SelectQueryBlockContext extends ParserRuleContext {
 		public String uuid ;
+		public List<ColumnContext> columnList = new ArrayList<ColumnContext>();
 		public SelectClauseContext selectClause() {
 			return getRuleContext(SelectClauseContext.class, 0);
 		}
@@ -1368,7 +1369,6 @@ public class sqlParser extends Parser {
 		public TerminalNode KW_SELECT() {
 			return getToken(sqlParser.KW_SELECT, 0);
 		}
-		public List<ColumnContext> columnListMore = new ArrayList<ColumnContext>();
 		public ColumnlistContext columnlist() {
 			return getRuleContext(ColumnlistContext.class, 0);
 		}
