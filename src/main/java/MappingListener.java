@@ -197,6 +197,7 @@ public class MappingListener extends sqlBaseListener {
 		ctx.uuid = ctx.fromClause().tableSource().uuid;
 		// 填节点的字段
 		// 填当前节点的
+		//目前还没有考虑表达式节点。初步想法，当前节点主要由表达式包含的字段set组成，
 		List<sqlParser.ColumnContext> columnListMore = new ArrayList<sqlParser.ColumnContext>();
 		if (ctx.fromClause().tableSource() != null) {
 			for (sqlParser.ColumnContext column : ctx.selectClause().columnlist().column()) {
