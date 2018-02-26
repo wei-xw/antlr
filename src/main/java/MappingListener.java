@@ -77,7 +77,6 @@ public class MappingListener extends sqlBaseListener {
 		System.out.println("上一个节点uuid： " + ctx.selectStatement().uuid);
 		System.out.println("当前节点字段:");
 		visitInsertClause(ctx.insertClause());
-		System.out.println();
 		System.out.println("当前节点uuid： " + UUID.randomUUID());
 		visitColumnList(ctx.selectStatement().columnList);
 	}
@@ -88,7 +87,7 @@ public class MappingListener extends sqlBaseListener {
 		for (sqlParser.ColumnContext column : columnList) {
 			System.out.print(column.fieldName().getText());
 			if (column.alias() != null)
-				System.out.println(" 别名:" + column.alias().getText() + ",");
+				System.out.println(" 别名:" + column.alias().getText());
 			else
 				System.out.println();
 		}
@@ -142,7 +141,7 @@ public class MappingListener extends sqlBaseListener {
 		// TODO Auto-generated method stub
 		if (insertClause.columnlist() != null) {
 			for (sqlParser.ColumnContext column : insertClause.columnlist().column()) {
-				System.out.print(column.fieldName().getText() + ",");
+				System.out.println(column.fieldName().getText());
 			}
 		} else {
 			System.out.println("sql中没有inser字句的字段，需要查询元数据");
@@ -230,7 +229,6 @@ public class MappingListener extends sqlBaseListener {
 		}
 		if (ctx.fromClause().tableSource() instanceof sqlParser.SelectjoinContext) {
 			ctx.uuid = UUID.randomUUID().toString();
-			// 对于join，还没管join的对象不是表，又是一个子查询的情况。
 			sqlParser.SelectjoinContext selectjoin = (sqlParser.SelectjoinContext) ctx.fromClause().tableSource();
 			List<sqlParser.TableSourceContext> tablesList = selectjoin.tableSource();
 			List<sqlParser.Join_typeContext> join_typeList = selectjoin.join_type();
@@ -247,9 +245,10 @@ public class MappingListener extends sqlBaseListener {
 			visitColumnList(columnListMore);
 			System.out.println("当前节点uuid： " + ctx.uuid);
 			for (int i = 0; i < join_typeList.size(); i++) {
-				System.out.println(selectjoin.tableSource(i).alias);
-				System.out.println(selectjoin.tableSource(i + 1).alias);
 				System.out.println("JOIN类型： " + join_typeList.get(i).getText() + " JOIN");
+				System.out.print("表：");
+				System.out.print(selectjoin.tableSource(i).alias+",");
+				System.out.println(selectjoin.tableSource(i + 1).alias);
 				System.out.println("JOIN条件：" + selectjoin.expression(i).getText());
 			}
 			System.out.println();
@@ -325,6 +324,7 @@ public class MappingListener extends sqlBaseListener {
 	public void exitSubSelectQuery(sqlParser.SubSelectQueryContext ctx) {
 		ctx.columnList = ctx.selectStatement().columnList;
 		ctx.uuid = ctx.selectStatement().uuid;
+		ctx.alias=ctx.alias().getText();
 	}
 
 	/**
@@ -569,10 +569,12 @@ public class MappingListener extends sqlBaseListener {
 	@Override
 	public void exitSelectjoin(sqlParser.SelectjoinContext ctx) {
 		for (sqlParser.TableSourceContext table : ctx.tableSource()) {
-			System.out.println("源节点");
-			System.out.println(table.tableName + "  别名:" + table.alias);
-			System.out.println("当前节点uuid： " + table.uuid);
-			System.out.println();
+			if(table instanceof sqlParser.SimpleTableContext) {
+				System.out.println("源节点");
+				System.out.println(table.tableName + "  别名:" + table.alias);
+				System.out.println("当前节点uuid： " + table.uuid);
+				System.out.println();
+			}
 			ctx.columnList.addAll(table.columnList);// 获取join的表所有字段用于外层sql替换*
 		  }
 	}
@@ -780,7 +782,8 @@ public class MappingListener extends sqlBaseListener {
 			ctx.alias = ctx.alias().getText();
 		if (!(ctx.getParent() instanceof sqlParser.SelectjoinContext)) {
 			System.out.println("源节点：");
-			System.out.println(ctx.getText());
+			System.out.print(ctx.tableName);
+			System.out.println(" 别名："+ctx.alias);
 			System.out.println("当前节点uuid： " + ctx.uuid);
 			System.out.println(ctx.columnList.size() + "个字段");
 			System.out.println();
