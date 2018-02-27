@@ -86,7 +86,7 @@ public class MappingListener extends sqlBaseListener {
 		// TODO Auto-generated method stub
 		System.out.println("字段：");
 		for (sqlParser.ColumnContext column : columnList) {
-			System.out.print(column.fieldName().getText());
+			System.out.print(column.fieldExpression().fieldName().getText());
 			if (column.alias() != null)
 				System.out.println(" 别名:" + column.alias().getText());
 			else
@@ -144,7 +144,7 @@ public class MappingListener extends sqlBaseListener {
 		// TODO Auto-generated method stub
 		if (insertClause.columnlist() != null) {
 			for (sqlParser.ColumnContext column : insertClause.columnlist().column()) {
-				System.out.println(column.fieldName().getText());
+				System.out.println(column.fieldExpression().fieldName().getText());
 			}
 		} else {
 			System.out.println("sql中没有inser字句的字段，需要查询元数据");
@@ -201,7 +201,7 @@ public class MappingListener extends sqlBaseListener {
 		List<sqlParser.ColumnContext> columnListMore = new ArrayList<sqlParser.ColumnContext>();
 		if (ctx.fromClause().tableSource() != null) {
 			for (sqlParser.ColumnContext column : ctx.selectClause().columnlist().column()) {
-				if (column.allFields() == null) {
+				if (column.fieldExpression().allFields() == null) {
 					columnListMore.add(column);
 				} else {
 					columnListMore.addAll(ctx.fromClause().tableSource().columnList);
@@ -231,7 +231,7 @@ public class MappingListener extends sqlBaseListener {
 				System.out.print("表：");
 				System.out.print(selectjoin.tableSource(i).alias + ",");
 				System.out.println(selectjoin.tableSource(i + 1).alias);
-				System.out.println("JOIN条件：" + selectjoin.expression(i).getText());
+				System.out.println("JOIN条件：" + selectjoin.booleanExpression(i).getText());
 			}
 			System.out.println();
 		}
@@ -285,7 +285,7 @@ public class MappingListener extends sqlBaseListener {
 			if (whereClause instanceof sqlParser.WhereContext) {
 				sqlParser.WhereContext where = (sqlParser.WhereContext) whereClause;
 				System.out.println("筛选节点");
-				System.out.println("筛选条件:" + where.searchCondition().getText());
+				System.out.println("筛选条件:" + where.booleanExpression().getText());
 			} else {
 				sqlParser.TopContext top = (sqlParser.TopContext) whereClause;
 				System.out.println("top节点");
@@ -310,6 +310,8 @@ public class MappingListener extends sqlBaseListener {
 		ctx.columnList = ctx.selectStatement().columnList;
 		ctx.uuid = ctx.selectStatement().uuid;
 		ctx.alias = ctx.alias().getText();
+		
+		System.out.println();
 	}
 
 	/**
@@ -666,72 +668,6 @@ public class MappingListener extends sqlBaseListener {
 	 */
 	@Override
 	public void exitOrderByClause(sqlParser.OrderByClauseContext ctx) {
-	}
-
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>
-	 * The default implementation does nothing.
-	 * </p>
-	 */
-	@Override
-	public void enterSearchCondition(sqlParser.SearchConditionContext ctx) {
-	}
-
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>
-	 * The default implementation does nothing.
-	 * </p>
-	 */
-	@Override
-	public void exitSearchCondition(sqlParser.SearchConditionContext ctx) {
-	}
-
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>
-	 * The default implementation does nothing.
-	 * </p>
-	 */
-	@Override
-	public void enterSearchItem(sqlParser.SearchItemContext ctx) {
-	}
-
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>
-	 * The default implementation does nothing.
-	 * </p>
-	 */
-	@Override
-	public void exitSearchItem(sqlParser.SearchItemContext ctx) {
-	}
-
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>
-	 * The default implementation does nothing.
-	 * </p>
-	 */
-	@Override
-	public void enterExpression(sqlParser.ExpressionContext ctx) {
-	}
-
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>
-	 * The default implementation does nothing.
-	 * </p>
-	 */
-	@Override
-	public void exitExpression(sqlParser.ExpressionContext ctx) {
 	}
 
 	/**
