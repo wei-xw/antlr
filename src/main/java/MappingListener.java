@@ -1,6 +1,7 @@
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 import org.antlr.v4.runtime.ParserRuleContext;
@@ -82,15 +83,11 @@ public class MappingListener extends sqlBaseListener {
 		visitColumnList(ctx.selectStatement().columnList);
 	}
 
-	private void visitColumnList(List<sqlParser.ColumnContext> columnList) {
+	private void visitColumnList(List<Column> columnList) {
 		// TODO Auto-generated method stub
 		System.out.println("字段：");
-		for (sqlParser.ColumnContext column : columnList) {
-			System.out.print(column.fieldExpression().fieldName().getText());
-			if (column.alias() != null)
-				System.out.println(" 别名:" + column.alias().getText());
-			else
-				System.out.println();
+		for (Column column : columnList) {
+			System.out.print(column.getColumnName());
 		}
 	}
 
@@ -147,7 +144,7 @@ public class MappingListener extends sqlBaseListener {
 				System.out.println(column.fieldExpression().fieldName().getText());
 			}
 		} else {
-			System.out.println("sql中没有inser字句的字段，需要查询元数据");
+			System.out.println("sql中没有insert字句的字段，需要查询元数据");
 		}
 	}
 
@@ -185,6 +182,11 @@ public class MappingListener extends sqlBaseListener {
 	public void enterSelectQueryBlock(sqlParser.SelectQueryBlockContext ctx) {
 	}
 
+	private Set<sqlParser.ColumnContext> visitFieldExpression(sqlParser.FieldExpressionContext fieldExpression) {
+		return null;
+
+	}
+
 	/**
 	 * {@inheritDoc}
 	 *
@@ -197,16 +199,27 @@ public class MappingListener extends sqlBaseListener {
 		ctx.uuid = ctx.fromClause().tableSource().uuid;
 		// 填节点的字段
 		// 填当前节点的
-		//目前还没有考虑表达式节点。初步想法，当前节点主要由表达式包含的字段set组成，
-		List<sqlParser.ColumnContext> columnListMore = new ArrayList<sqlParser.ColumnContext>();
+		// 目前还没有考虑表达式节点。初步想法，当前节点主要由表达式包含的字段set组成，
+		List<Column> columnRealList = new ArrayList<Column>();
+		List<Column> columnListMore = new ArrayList<Column>();
 		if (ctx.fromClause().tableSource() != null) {
-			for (sqlParser.ColumnContext column : ctx.selectClause().columnlist().column()) {
-				if (column.fieldExpression().allFields() == null) {
-					columnListMore.add(column);
+			Column col = new Column();
+			for (sqlParser.ColumnContext columnContext : ctx.selectClause().columnlist().column()) {
+				if (columnContext.fieldExpression().allFields() == null) {
+					if (columnContext.fieldExpression().fieldName() == null) {
+						visitFieldExpression(columnContext.fieldExpression());
+					}
+					col.setColumnName(columnContext.fieldExpression().getText());
+					if (columnContext.alias() != null) { // 有别名的设置，没有的这里也没有什么好办法。
+						col.setAlias(columnContext.alias().getText());
+					}
+					columnRealList.add(col);
 				} else {
+					columnRealList.addAll(ctx.fromClause().tableSource().columnList);
 					columnListMore.addAll(ctx.fromClause().tableSource().columnList);
 				}
 			}
+			// 此时columnRealList是select后面的column把*替换后的，column可以由表达式函数构成，下面处理
 		}
 		ctx.columnList = columnListMore;
 		if (ctx.fromClause().tableSource() instanceof sqlParser.SelectjoinContext) {
@@ -310,7 +323,7 @@ public class MappingListener extends sqlBaseListener {
 		ctx.columnList = ctx.selectStatement().columnList;
 		ctx.uuid = ctx.selectStatement().uuid;
 		ctx.alias = ctx.alias().getText();
-		
+
 		System.out.println();
 	}
 

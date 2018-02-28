@@ -275,7 +275,7 @@ public class sqlParser extends Parser {
 
 	public static class SelectStatementContext extends ParserRuleContext {
 		public String uuid;
-		public List<ColumnContext> columnList = new ArrayList<ColumnContext>();
+		public List<Column> columnList = new ArrayList<Column>();
 
 		public SelectStatementContext(ParserRuleContext parent, int invokingState) {
 			super(parent, invokingState);
@@ -484,7 +484,7 @@ public class sqlParser extends Parser {
 
 	public static class SelectQueryBlockContext extends ParserRuleContext {
 		public String uuid;
-		public List<ColumnContext> columnList = new ArrayList<ColumnContext>();
+		public List<Column> columnList = new ArrayList<Column>();
 
 		public SelectClauseContext selectClause() {
 			return getRuleContext(SelectClauseContext.class, 0);
@@ -1537,7 +1537,7 @@ public class sqlParser extends Parser {
 	public static class TableSourceContext extends ParserRuleContext {
 		// TableSource视为表，虽然可能由子查询、selectjoin或表。
 		public String uuid;
-		public List<ColumnContext> columnList = new ArrayList<ColumnContext>();
+		public List<Column> columnList = new ArrayList<Column>();
 		public String tableName;
 		public String alias;
 		public TableSourceContext(ParserRuleContext parent, int invokingState) {
