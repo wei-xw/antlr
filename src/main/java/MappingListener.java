@@ -1,5 +1,6 @@
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -182,9 +183,60 @@ public class MappingListener extends sqlBaseListener {
 	public void enterSelectQueryBlock(sqlParser.SelectQueryBlockContext ctx) {
 	}
 
-	private Set<sqlParser.ColumnContext> visitFieldExpression(sqlParser.FieldExpressionContext fieldExpression) {
-		return null;
+	private Set<Column> visitFieldExpression(sqlParser.FieldExpressionContext fieldExpression) {
+		Set<Column> hs = new HashSet<Column>();
+		Column col = new Column();
+		if (fieldExpression.caseExpression() != null)
+			hs.addAll(visitCaseExpression(fieldExpression.caseExpression()));
+		if (fieldExpression.methodExpression() != null)
+			hs.addAll(visitMethodExpression(fieldExpression.methodExpression()));
+		if(fieldExpression.fieldExpression()!=null) {
+			for(sqlParser.FieldExpressionContext fieldExp :fieldExpression.fieldExpression())
+				hs.addAll(visitFieldExpression(fieldExp));
+		}
+		if (fieldExpression.fieldName() != null) {
+			col.setColumnName(fieldExpression.fieldName().getText());
+			hs.add(col);
+		}
 
+		return hs;
+	}
+
+	private Set<Column> visitMethodExpression(sqlParser.MethodExpressionContext methodExpressionContext) {
+		// TODO Auto-generated method stub
+		Set<Column> hs = new HashSet<Column>();
+		if(methodExpressionContext.fieldExpression()!=null) {
+			for(sqlParser.FieldExpressionContext fieldExp :methodExpressionContext.fieldExpression())
+				hs.addAll(visitFieldExpression(fieldExp));
+		}
+		return hs;
+	}
+
+	private Set<Column> visitCaseExpression(sqlParser.CaseExpressionContext caseExpressionContext) {
+		// TODO Auto-generated method stub
+		Set<Column> hs = new HashSet<Column>();
+		if(caseExpressionContext.fieldExpression()!=null) {
+			for(sqlParser.FieldExpressionContext fieldExp :caseExpressionContext.fieldExpression())
+				hs.addAll(visitFieldExpression(fieldExp));
+		}
+		if(caseExpressionContext.booleanExpression()!=null) {
+			for(sqlParser.BooleanExpressionContext booleanExp :caseExpressionContext.booleanExpression())
+				hs.addAll(visitBooleanExpression(booleanExp));
+		}
+		return hs;
+	}
+
+	private Set<Column> visitBooleanExpression(sqlParser.BooleanExpressionContext booleanExpression) {
+		Set<Column> hs = new HashSet<Column>();
+		if(booleanExpression.fieldExpression()!=null) {
+			for(sqlParser.FieldExpressionContext fieldExp :booleanExpression.fieldExpression())
+				hs.addAll(visitFieldExpression(fieldExp));
+		}
+		if(booleanExpression.booleanExpression()!=null) {
+			for(sqlParser.BooleanExpressionContext booleanExp :booleanExpression.booleanExpression())
+				hs.addAll(visitBooleanExpression(booleanExp));
+		}
+		return hs;
 	}
 
 	/**
@@ -199,27 +251,41 @@ public class MappingListener extends sqlBaseListener {
 		ctx.uuid = ctx.fromClause().tableSource().uuid;
 		// 填节点的字段
 		// 填当前节点的
-		// 目前还没有考虑表达式节点。初步想法，当前节点主要由表达式包含的字段set组成，
 		List<Column> columnRealList = new ArrayList<Column>();
 		List<Column> columnListMore = new ArrayList<Column>();
+		boolean isExpression = false;
+		boolean isAlias = false;
 		if (ctx.fromClause().tableSource() != null) {
 			Column col = new Column();
 			for (sqlParser.ColumnContext columnContext : ctx.selectClause().columnlist().column()) {
 				if (columnContext.fieldExpression().allFields() == null) {
 					if (columnContext.fieldExpression().fieldName() == null) {
-						visitFieldExpression(columnContext.fieldExpression());
+						columnListMore.addAll(visitFieldExpression(columnContext.fieldExpression()));
+						isExpression = true;
+					} else {
+						col.setColumnName(columnContext.fieldExpression().getText());
+						if (columnContext.alias() != null) { // 有别名的设置，没有的这里也没有什么好办法,暂时和columnName一样。
+							isAlias = true;// 有别名，用表达式节点体现，节点的端口是别名，表达式是字段名。
+							col.setAlias(columnContext.alias().getText());
+						} else {
+							col.setAlias(columnContext.fieldExpression().getText());
+						}
+						columnListMore.add(col);
 					}
 					col.setColumnName(columnContext.fieldExpression().getText());
-					if (columnContext.alias() != null) { // 有别名的设置，没有的这里也没有什么好办法。
+					if (columnContext.alias() != null) { // 有别名的设置，没有的这里也没有什么好办法,暂时和columnName一样。
 						col.setAlias(columnContext.alias().getText());
+					} else {
+						col.setAlias(columnContext.fieldExpression().getText());
 					}
 					columnRealList.add(col);
 				} else {
-					columnRealList.addAll(ctx.fromClause().tableSource().columnList);
-					columnListMore.addAll(ctx.fromClause().tableSource().columnList);
+					// 两个list大小，以及加工映射，后面？的字段表达式为空，默认填字段
+					columnRealList.addAll(ctx.fromClause().tableSource().columnList);// 此时columnRealList是select后面的column把*替换后的，column可以由表达式函数构成
+					columnListMore.addAll(ctx.fromClause().tableSource().columnList);// columnListMore
+																						// *替换后的，表达式函数中包含的字段set。
 				}
 			}
-			// 此时columnRealList是select后面的column把*替换后的，column可以由表达式函数构成，下面处理
 		}
 		ctx.columnList = columnListMore;
 		if (ctx.fromClause().tableSource() instanceof sqlParser.SelectjoinContext) {
@@ -262,18 +328,22 @@ public class MappingListener extends sqlBaseListener {
 				System.out.println();
 			}
 		}
-
-		// 把这部分放到各自的exitSelect（）和exitUnion（）中
-		// // 给selectStatement填字段
-		// // selectStatement可以由SelectQueryBlock或union组成，将两者对于外层sql都表现为selectStatement
-		// if (ctx.getParent() instanceof sqlParser.SelectContext) {
-		// sqlParser.SelectStatementContext parent = (sqlParser.SelectContext)
-		// ctx.getParent();
-		// parent.columnList = columnListMore;
-		// parent.uuid = ctx.uuid;
-		// }
-		// // union待
-
+		if (isExpression) {
+			System.out.println("表达式节点：");
+			System.out.println("上一个节点uuid： " + ctx.uuid);
+			System.out.println("上一个节点的字段");
+			for (Column col : columnListMore) {
+				System.out.println(col.getColumnName() + " 别名 " + col.getAlias());
+			}
+			System.out.println("当前节点的字段");
+			for (Column col : columnRealList) {
+				System.out.println(col.getColumnName() + " 别名 " + col.getAlias());
+			}
+			ctx.uuid = UUID.randomUUID().toString();
+			System.out.println("当前节点uuid： " + ctx.uuid);
+		} else {
+			// 对字段别名处理？？？
+		}
 	}
 
 	private void visitOrderBy(sqlParser.OrderByClauseContext orderByClause) {
@@ -474,13 +544,6 @@ public class MappingListener extends sqlBaseListener {
 	public void exitOrderType(sqlParser.OrderTypeContext ctx) {
 	}
 
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>
-	 * The default implementation does nothing.
-	 * </p>
-	 */
 	/**
 	 * {@inheritDoc}
 	 *
