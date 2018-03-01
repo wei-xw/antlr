@@ -268,7 +268,7 @@ public class MappingListener extends sqlBaseListener {
 					} else {
 						col.setColumnName(columnContext.fieldExpression().getText());
 						if (columnContext.alias() != null) { // 有别名的设置，没有的这里也没有什么好办法,暂时和columnName一样。
-							isAlias = true;// 有别名，用表达式节点体现，节点的端口是别名，表达式是字段名。
+							isAlias = true;// 有别名，用表达式节点体现，节点的端口是别名，表达式是字段名????
 							col.setAlias(columnContext.alias().getText());
 						} else {
 							col.setAlias(columnContext.fieldExpression().getText());
@@ -284,9 +284,10 @@ public class MappingListener extends sqlBaseListener {
 					columnRealList.add(col);
 				} else {
 					// 两个list大小，以及加工映射，后面？的字段表达式为空，默认填字段
-					columnRealList.addAll(ctx.fromClause().tableSource().columnList);// 此时columnRealList是select后面的column把*替换后的，column可以由表达式函数构成
-					columnListMore.addAll(ctx.fromClause().tableSource().columnList);// columnListMore
-																						// *替换后的，表达式函数中包含的字段set。
+					// 此时columnRealList是select后面的column把*替换后的，column可以由表达式函数构成
+					columnRealList.addAll(ctx.fromClause().tableSource().columnList);
+					// columnListMore *替换后的，表达式函数中包含的字段set。
+					columnListMore.addAll(ctx.fromClause().tableSource().columnList);
 				}
 			}
 		}
