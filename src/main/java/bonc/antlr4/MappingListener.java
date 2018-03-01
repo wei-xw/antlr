@@ -91,7 +91,7 @@ public class MappingListener extends sqlBaseListener {
 		// TODO Auto-generated method stub
 		System.out.println("字段：");
 		for (Column column : columnList) {
-			System.out.print(column.getColumnName());
+			System.out.println(column.getColumnName());
 		}
 	}
 
@@ -197,7 +197,7 @@ public class MappingListener extends sqlBaseListener {
 			for(sqlParser.FieldExpressionContext fieldExp :fieldExpression.fieldExpression())
 				hs.addAll(visitFieldExpression(fieldExp));
 		}
-		if (fieldExpression.fieldName() != null) {
+		if (fieldExpression.fieldName() != null&&fieldExpression.fieldName() instanceof sqlParser.IdentifierFieldContext) {
 			col.setColumnName(fieldExpression.fieldName().getText());
 			hs.add(col);
 		}
@@ -268,7 +268,7 @@ public class MappingListener extends sqlBaseListener {
 					} else {
 						col.setColumnName(columnContext.fieldExpression().getText());
 						if (columnContext.alias() != null) { // 有别名的设置，没有的这里也没有什么好办法,暂时和columnName一样。
-							isAlias = true;// 有别名，用表达式节点体现，节点的端口是别名，表达式是字段名。
+							isAlias = true;// 有别名，用表达式节点体现，节点的端口是别名，表达式是字段名????
 							col.setAlias(columnContext.alias().getText());
 						} else {
 							col.setAlias(columnContext.fieldExpression().getText());
@@ -284,9 +284,10 @@ public class MappingListener extends sqlBaseListener {
 					columnRealList.add(col);
 				} else {
 					// 两个list大小，以及加工映射，后面？的字段表达式为空，默认填字段
-					columnRealList.addAll(ctx.fromClause().tableSource().columnList);// 此时columnRealList是select后面的column把*替换后的，column可以由表达式函数构成
-					columnListMore.addAll(ctx.fromClause().tableSource().columnList);// columnListMore
-																						// *替换后的，表达式函数中包含的字段set。
+					// 此时columnRealList是select后面的column把*替换后的，column可以由表达式函数构成
+					columnRealList.addAll(ctx.fromClause().tableSource().columnList);
+					// columnListMore *替换后的，表达式函数中包含的字段set。
+					columnListMore.addAll(ctx.fromClause().tableSource().columnList);
 				}
 			}
 		}
@@ -320,7 +321,10 @@ public class MappingListener extends sqlBaseListener {
 
 		if (ctx.selectAction() != null) {
 			for (sqlParser.SelectActionContext selectAction : ctx.selectAction()) {
-				visitWhere(selectAction.whereClause());
+				for(Column col :visitWhere(selectAction.whereClause())) {
+					if(!columnListMore.contains(col))
+						columnListMore.add(col);
+				}
 				visitGroupBy(selectAction.groupByClause());
 				visitOrderBy(selectAction.orderByClause());
 				System.out.println("上一个节点uuid： " + ctx.uuid);
@@ -365,19 +369,22 @@ public class MappingListener extends sqlBaseListener {
 		}
 	}
 
-	private void visitWhere(sqlParser.WhereClauseContext whereClause) {
+	private Set<Column> visitWhere(sqlParser.WhereClauseContext whereClause) {
 		// TODO Auto-generated method stub
 		if (whereClause != null) {
 			if (whereClause instanceof sqlParser.WhereContext) {
 				sqlParser.WhereContext where = (sqlParser.WhereContext) whereClause;
 				System.out.println("筛选节点");
 				System.out.println("筛选条件:" + where.booleanExpression().getText());
+				return visitBooleanExpression(where.booleanExpression());
 			} else {
 				sqlParser.TopContext top = (sqlParser.TopContext) whereClause;
 				System.out.println("top节点");
 				System.out.println("数量:" + top.getText());
+				return new HashSet<Column>();
 			}
 		}
+		return new HashSet<Column>();
 	}
 
 	@Override
@@ -778,28 +785,6 @@ public class MappingListener extends sqlBaseListener {
 		System.out.println("当前节点uuid： " + ctx.uuid);
 		System.out.println(ctx.columnList.size() + "个字段");
 		System.out.println();
-	}
-
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>
-	 * The default implementation does nothing.
-	 * </p>
-	 */
-	@Override
-	public void enterFieldName(sqlParser.FieldNameContext ctx) {
-	}
-
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>
-	 * The default implementation does nothing.
-	 * </p>
-	 */
-	@Override
-	public void exitFieldName(sqlParser.FieldNameContext ctx) {
 	}
 
 	/**

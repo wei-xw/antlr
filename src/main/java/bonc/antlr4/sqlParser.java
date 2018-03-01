@@ -434,6 +434,8 @@ public class sqlParser extends Parser {
 	public static class SelectQueryBlockContext extends ParserRuleContext {
 		public String uuid;
 		public List<Column> columnList = new ArrayList<Column>();
+		public void dd(){
+		};
 		public SelectClauseContext selectClause() {
 			return getRuleContext(SelectClauseContext.class,0);
 		}
@@ -2274,24 +2276,65 @@ public class sqlParser extends Parser {
 	}
 
 	public static class FieldNameContext extends ParserRuleContext {
-		public List<TerminalNode> IDENTIFIER() { return getTokens(sqlParser.IDENTIFIER); }
-		public TerminalNode IDENTIFIER(int i) {
-			return getToken(sqlParser.IDENTIFIER, i);
-		}
-		public TerminalNode INT() { return getToken(sqlParser.INT, 0); }
-		public TerminalNode DOUBLE() { return getToken(sqlParser.DOUBLE, 0); }
-		public TerminalNode STRING() { return getToken(sqlParser.STRING, 0); }
 		public FieldNameContext(ParserRuleContext parent, int invokingState) {
 			super(parent, invokingState);
 		}
 		@Override public int getRuleIndex() { return RULE_fieldName; }
+	 
+		public FieldNameContext() { }
+		public void copyFrom(FieldNameContext ctx) {
+			super.copyFrom(ctx);
+		}
+	}
+	public static class IdentifierFieldContext extends FieldNameContext {
+		public List<TerminalNode> IDENTIFIER() { return getTokens(sqlParser.IDENTIFIER); }
+		public TerminalNode IDENTIFIER(int i) {
+			return getToken(sqlParser.IDENTIFIER, i);
+		}
+		public IdentifierFieldContext(FieldNameContext ctx) { copyFrom(ctx); }
 		@Override
 		public void enterRule(ParseTreeListener listener) {
-			if ( listener instanceof sqlListener ) ((sqlListener)listener).enterFieldName(this);
+			if ( listener instanceof sqlListener ) ((sqlListener)listener).enterIdentifierField(this);
 		}
 		@Override
 		public void exitRule(ParseTreeListener listener) {
-			if ( listener instanceof sqlListener ) ((sqlListener)listener).exitFieldName(this);
+			if ( listener instanceof sqlListener ) ((sqlListener)listener).exitIdentifierField(this);
+		}
+	}
+	public static class DoubleFieldContext extends FieldNameContext {
+		public TerminalNode DOUBLE() { return getToken(sqlParser.DOUBLE, 0); }
+		public DoubleFieldContext(FieldNameContext ctx) { copyFrom(ctx); }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof sqlListener ) ((sqlListener)listener).enterDoubleField(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof sqlListener ) ((sqlListener)listener).exitDoubleField(this);
+		}
+	}
+	public static class StringFieldContext extends FieldNameContext {
+		public TerminalNode STRING() { return getToken(sqlParser.STRING, 0); }
+		public StringFieldContext(FieldNameContext ctx) { copyFrom(ctx); }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof sqlListener ) ((sqlListener)listener).enterStringField(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof sqlListener ) ((sqlListener)listener).exitStringField(this);
+		}
+	}
+	public static class IntFieldContext extends FieldNameContext {
+		public TerminalNode INT() { return getToken(sqlParser.INT, 0); }
+		public IntFieldContext(FieldNameContext ctx) { copyFrom(ctx); }
+		@Override
+		public void enterRule(ParseTreeListener listener) {
+			if ( listener instanceof sqlListener ) ((sqlListener)listener).enterIntField(this);
+		}
+		@Override
+		public void exitRule(ParseTreeListener listener) {
+			if ( listener instanceof sqlListener ) ((sqlListener)listener).exitIntField(this);
 		}
 	}
 
@@ -2304,6 +2347,7 @@ public class sqlParser extends Parser {
 			_errHandler.sync(this);
 			switch (_input.LA(1)) {
 			case IDENTIFIER:
+				_localctx = new IdentifierFieldContext(_localctx);
 				enterOuterAlt(_localctx, 1);
 				{
 				setState(335);
@@ -2329,6 +2373,7 @@ public class sqlParser extends Parser {
 				}
 				break;
 			case INT:
+				_localctx = new IntFieldContext(_localctx);
 				enterOuterAlt(_localctx, 2);
 				{
 				setState(343);
@@ -2336,6 +2381,7 @@ public class sqlParser extends Parser {
 				}
 				break;
 			case DOUBLE:
+				_localctx = new DoubleFieldContext(_localctx);
 				enterOuterAlt(_localctx, 3);
 				{
 				setState(344);
@@ -2343,6 +2389,7 @@ public class sqlParser extends Parser {
 				}
 				break;
 			case STRING:
+				_localctx = new StringFieldContext(_localctx);
 				enterOuterAlt(_localctx, 4);
 				{
 				setState(345);

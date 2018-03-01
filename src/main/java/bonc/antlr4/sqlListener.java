@@ -355,15 +355,53 @@ public interface sqlListener extends ParseTreeListener {
 	 */
 	void exitElseClause(sqlParser.ElseClauseContext ctx);
 	/**
-	 * Enter a parse tree produced by {@link sqlParser#fieldName}.
+	 * Enter a parse tree produced by the {@code identifierField}
+	 * labeled alternative in {@link sqlParser#fieldName}.
 	 * @param ctx the parse tree
 	 */
-	void enterFieldName(sqlParser.FieldNameContext ctx);
+	void enterIdentifierField(sqlParser.IdentifierFieldContext ctx);
 	/**
-	 * Exit a parse tree produced by {@link sqlParser#fieldName}.
+	 * Exit a parse tree produced by the {@code identifierField}
+	 * labeled alternative in {@link sqlParser#fieldName}.
 	 * @param ctx the parse tree
 	 */
-	void exitFieldName(sqlParser.FieldNameContext ctx);
+	void exitIdentifierField(sqlParser.IdentifierFieldContext ctx);
+	/**
+	 * Enter a parse tree produced by the {@code intField}
+	 * labeled alternative in {@link sqlParser#fieldName}.
+	 * @param ctx the parse tree
+	 */
+	void enterIntField(sqlParser.IntFieldContext ctx);
+	/**
+	 * Exit a parse tree produced by the {@code intField}
+	 * labeled alternative in {@link sqlParser#fieldName}.
+	 * @param ctx the parse tree
+	 */
+	void exitIntField(sqlParser.IntFieldContext ctx);
+	/**
+	 * Enter a parse tree produced by the {@code doubleField}
+	 * labeled alternative in {@link sqlParser#fieldName}.
+	 * @param ctx the parse tree
+	 */
+	void enterDoubleField(sqlParser.DoubleFieldContext ctx);
+	/**
+	 * Exit a parse tree produced by the {@code doubleField}
+	 * labeled alternative in {@link sqlParser#fieldName}.
+	 * @param ctx the parse tree
+	 */
+	void exitDoubleField(sqlParser.DoubleFieldContext ctx);
+	/**
+	 * Enter a parse tree produced by the {@code StringField}
+	 * labeled alternative in {@link sqlParser#fieldName}.
+	 * @param ctx the parse tree
+	 */
+	void enterStringField(sqlParser.StringFieldContext ctx);
+	/**
+	 * Exit a parse tree produced by the {@code StringField}
+	 * labeled alternative in {@link sqlParser#fieldName}.
+	 * @param ctx the parse tree
+	 */
+	void exitStringField(sqlParser.StringFieldContext ctx);
 	/**
 	 * Enter a parse tree produced by {@link sqlParser#operator}.
 	 * @param ctx the parse tree

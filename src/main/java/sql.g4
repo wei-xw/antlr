@@ -14,7 +14,7 @@ insertStatement:insertClause selectStatement
 ;
 selectStatement 
 locals [
-String uuid;//不知道为啥，第一个属性总会多一个public，所以这里不加public
+String uuid;//不知道为啥，第一个属性总会多一个public，而且最后一个会补一个分号，所以这里不加public，那里不加分号
 public List<Column> columnList = new ArrayList<Column>()
 ]
 :unionQuery orderByClause?                     #union
@@ -26,7 +26,9 @@ unionQuery: selectQueryBlock (KW_UNION KW_ALL? selectQueryBlock)+
 selectQueryBlock 
 locals [
 String uuid;
-public List<Column> columnList = new ArrayList<Column>()
+public List<Column> columnList = new ArrayList<Column>();
+public void dd(){
+}
 ]
 : selectClause fromClause (selectAction)*
 ;
@@ -106,10 +108,10 @@ caseExpression: KW_CASE (KW_WHEN booleanExpression KW_THEN fieldExpression)+ (el
                 | KW_CASE fieldExpression (KW_WHEN fieldExpression KW_THEN fieldExpression)+ (elseClause)? KW_END
 ;
 elseClause:KW_ELSE fieldExpression;
-fieldName : IDENTIFIER ('.' IDENTIFIER)*
-		|INT
-		|DOUBLE
-                |STRING
+fieldName : IDENTIFIER ('.' IDENTIFIER)*                 #identifierField
+		|INT                                     #intField
+		|DOUBLE                                  #doubleField
+                |STRING                                  #StringField
 ;
 
 STAR : '*';
