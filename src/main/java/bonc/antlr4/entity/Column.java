@@ -1,3 +1,4 @@
+package bonc.antlr4.entity;
 
 public class Column {
 	private String columnName;

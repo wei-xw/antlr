@@ -1,18 +1,34 @@
 grammar sql;
-options { 
-language=Java; 
-} 
-prog:dmlStatement SEMI
+
+@lexer::header {
+package bonc.antlr4;
+}
+@parser::header{
+package bonc.antlr4;
+import bonc.antlr4.entity.*;
+}
+prog :dmlStatement SEMI
 ;
 dmlStatement:insertStatement | selectStatement ;
 insertStatement:insertClause selectStatement 
 ;
-selectStatement:unionQuery orderByClause?                     #union
+selectStatement 
+locals [
+String uuid;//不知道为啥，第一个属性总会多一个public，所以这里不加public
+public List<Column> columnList = new ArrayList<Column>()
+]
+:unionQuery orderByClause?                     #union
 |selectQueryBlock                                             #select
+
 ;
 unionQuery: selectQueryBlock (KW_UNION KW_ALL? selectQueryBlock)+
 ;
-selectQueryBlock : selectClause fromClause (selectAction)*
+selectQueryBlock 
+locals [
+String uuid;
+public List<Column> columnList = new ArrayList<Column>()
+]
+: selectClause fromClause (selectAction)*
 ;
 selectAction : whereClause 
 |groupByClause
@@ -47,7 +63,14 @@ groupByClause : KW_GROUP KW_BY fieldName
 ;
 orderByClause : KW_ORDER KW_BY orderList
 ;
-tableSource : tableName alias?                                   #simpleTable            
+tableSource 
+locals[
+String uuid;
+public List<Column> columnList = new ArrayList<Column>();
+public String tableName;
+public String alias
+]
+: tableName alias?                                   #simpleTable            
 |LPAREN selectStatement RPAREN alias                             #subSelectQuery
 |tableSource (join_type KW_JOIN tableSource KW_ON booleanExpression)+  #selectjoin
 ;

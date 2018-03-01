@@ -1,3 +1,4 @@
+package bonc.antlr4;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -8,6 +9,8 @@ import java.util.UUID;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ErrorNode;
 import org.antlr.v4.runtime.tree.TerminalNode;
+
+import bonc.antlr4.entity.Column;
 
 //尽量对于每个节点只对其父节点和子节点进行操作，防止太复杂。
 //对于语法规则有多个分支的情况，该规则对于外层的规则来说，不管什么分支，表现应一样
@@ -393,8 +396,6 @@ public class MappingListener extends sqlBaseListener {
 		ctx.columnList = ctx.selectStatement().columnList;
 		ctx.uuid = ctx.selectStatement().uuid;
 		ctx.alias = ctx.alias().getText();
-
-		System.out.println();
 	}
 
 	/**
