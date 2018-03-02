@@ -1,3 +1,4 @@
+
 package bonc.antlr4;
 
 import java.util.ArrayList;
@@ -15,7 +16,7 @@ import bonc.antlr4.entity.Column;
 //尽量对于每个节点只对其父节点和子节点进行操作，防止太复杂。
 //对于语法规则有多个分支的情况，该规则对于外层的规则来说，不管什么分支，表现应一样
 public class MappingListener extends sqlBaseListener {
-	
+
 	/**
 	 * {@inheritDoc}
 	 *
@@ -194,11 +195,12 @@ public class MappingListener extends sqlBaseListener {
 			hs.addAll(visitCaseExpression(fieldExpression.caseExpression()));
 		if (fieldExpression.methodExpression() != null)
 			hs.addAll(visitMethodExpression(fieldExpression.methodExpression()));
-		if(fieldExpression.fieldExpression()!=null) {
-			for(sqlParser.FieldExpressionContext fieldExp :fieldExpression.fieldExpression())
+		if (fieldExpression.fieldExpression() != null) {
+			for (sqlParser.FieldExpressionContext fieldExp : fieldExpression.fieldExpression())
 				hs.addAll(visitFieldExpression(fieldExp));
 		}
-		if (fieldExpression.fieldName() != null&&fieldExpression.fieldName() instanceof sqlParser.IdentifierFieldContext) {
+		if (fieldExpression.fieldName() != null
+				&& fieldExpression.fieldName() instanceof sqlParser.IdentifierFieldContext) {
 			col.setColumnName(fieldExpression.fieldName().getText());
 			hs.add(col);
 		}
@@ -209,8 +211,8 @@ public class MappingListener extends sqlBaseListener {
 	private Set<Column> visitMethodExpression(sqlParser.MethodExpressionContext methodExpressionContext) {
 		// TODO Auto-generated method stub
 		Set<Column> hs = new HashSet<Column>();
-		if(methodExpressionContext.fieldExpression()!=null) {
-			for(sqlParser.FieldExpressionContext fieldExp :methodExpressionContext.fieldExpression())
+		if (methodExpressionContext.fieldExpression() != null) {
+			for (sqlParser.FieldExpressionContext fieldExp : methodExpressionContext.fieldExpression())
 				hs.addAll(visitFieldExpression(fieldExp));
 		}
 		return hs;
@@ -219,12 +221,12 @@ public class MappingListener extends sqlBaseListener {
 	private Set<Column> visitCaseExpression(sqlParser.CaseExpressionContext caseExpressionContext) {
 		// TODO Auto-generated method stub
 		Set<Column> hs = new HashSet<Column>();
-		if(caseExpressionContext.fieldExpression()!=null) {
-			for(sqlParser.FieldExpressionContext fieldExp :caseExpressionContext.fieldExpression())
+		if (caseExpressionContext.fieldExpression() != null) {
+			for (sqlParser.FieldExpressionContext fieldExp : caseExpressionContext.fieldExpression())
 				hs.addAll(visitFieldExpression(fieldExp));
 		}
-		if(caseExpressionContext.booleanExpression()!=null) {
-			for(sqlParser.BooleanExpressionContext booleanExp :caseExpressionContext.booleanExpression())
+		if (caseExpressionContext.booleanExpression() != null) {
+			for (sqlParser.BooleanExpressionContext booleanExp : caseExpressionContext.booleanExpression())
 				hs.addAll(visitBooleanExpression(booleanExp));
 		}
 		return hs;
@@ -232,12 +234,12 @@ public class MappingListener extends sqlBaseListener {
 
 	private Set<Column> visitBooleanExpression(sqlParser.BooleanExpressionContext booleanExpression) {
 		Set<Column> hs = new HashSet<Column>();
-		if(booleanExpression.fieldExpression()!=null) {
-			for(sqlParser.FieldExpressionContext fieldExp :booleanExpression.fieldExpression())
+		if (booleanExpression.fieldExpression() != null) {
+			for (sqlParser.FieldExpressionContext fieldExp : booleanExpression.fieldExpression())
 				hs.addAll(visitFieldExpression(fieldExp));
 		}
-		if(booleanExpression.booleanExpression()!=null) {
-			for(sqlParser.BooleanExpressionContext booleanExp :booleanExpression.booleanExpression())
+		if (booleanExpression.booleanExpression() != null) {
+			for (sqlParser.BooleanExpressionContext booleanExp : booleanExpression.booleanExpression())
 				hs.addAll(visitBooleanExpression(booleanExp));
 		}
 		return hs;
@@ -322,14 +324,25 @@ public class MappingListener extends sqlBaseListener {
 
 		if (ctx.selectAction() != null) {
 			for (sqlParser.SelectActionContext selectAction : ctx.selectAction()) {
-				for(Column col :visitWhere(selectAction.whereClause())) {
-					if(!columnListMore.contains(col))
+				for (Column col : visitWhere(selectAction.whereClause())) {
+					if (!columnListMore.contains(col))
 						columnListMore.add(col);
 				}
-				visitGroupBy(selectAction.groupByClause());
-				visitOrderBy(selectAction.orderByClause());
+				for (Column col : visitOrderBy(selectAction.orderByClause())) {
+					if (!columnListMore.contains(col))
+						columnListMore.add(col);
+				}
+				// groupby还不知道该怎么做
+				// visitGroupBy(selectAction.groupByClause());
+			}
+			// 简单实现的，所以用了两个for循环，一个存字段，一个打印，之后是往xml对象里存，一个for就可以办到。
+			for (sqlParser.SelectActionContext selectAction : ctx.selectAction()) {
+				// groupby还不知道该怎么做
+				printGroupBy(selectAction.groupByClause());
+				printWhere(selectAction.whereClause());
+				printOrderBy(selectAction.orderByClause());
 				System.out.println("上一个节点uuid： " + ctx.uuid);
-				visitColumnList(ctx.columnList);
+				visitColumnList(columnListMore);
 				ctx.uuid = UUID.randomUUID().toString();
 				System.out.println("当前节点uuid： " + ctx.uuid);
 				visitColumnList(columnListMore);
@@ -354,16 +367,32 @@ public class MappingListener extends sqlBaseListener {
 		}
 	}
 
-	private void visitOrderBy(sqlParser.OrderByClauseContext orderByClause) {
+	private Set<Column> visitOrderBy(sqlParser.OrderByClauseContext orderByClause) {
+		// TODO Auto-generated method stub
+		Set<Column> hs = new HashSet<Column>();
+		if (orderByClause != null) {
+			System.out.println("排序节点");
+			System.out.println("排序条件：" + orderByClause.orderList().getText());
+			for (sqlParser.OrderItemContext item : orderByClause.orderList().orderItem()) {
+				System.out.println(item.getText());
+				hs.addAll(visitFieldExpression(item.fieldExpression()));
+			}
+		}
+		return hs;
+	}
+
+	private void printOrderBy(sqlParser.OrderByClauseContext orderByClause) {
 		// TODO Auto-generated method stub
 		if (orderByClause != null) {
 			System.out.println("排序节点");
 			System.out.println("排序条件：" + orderByClause.orderList().getText());
-			// for(orderByClause)
+			for (sqlParser.OrderItemContext item : orderByClause.orderList().orderItem()) {
+				System.out.println(item.getText());
+			}
 		}
 	}
 
-	private void visitGroupBy(sqlParser.GroupByClauseContext groupByClause) {
+	private void printGroupBy(sqlParser.GroupByClauseContext groupByClause) {
 		// TODO Auto-generated method stub
 		if (groupByClause != null) {
 			System.out.println("汇总节点");
@@ -386,6 +415,21 @@ public class MappingListener extends sqlBaseListener {
 			}
 		}
 		return new HashSet<Column>();
+	}
+
+	private void printWhere(sqlParser.WhereClauseContext whereClause) {
+		// TODO Auto-generated method stub
+		if (whereClause != null) {
+			if (whereClause instanceof sqlParser.WhereContext) {
+				sqlParser.WhereContext where = (sqlParser.WhereContext) whereClause;
+				System.out.println("筛选节点");
+				System.out.println("筛选条件:" + where.booleanExpression().getText());
+			} else {
+				sqlParser.TopContext top = (sqlParser.TopContext) whereClause;
+				System.out.println("top节点");
+				System.out.println("数量:" + top.getText());
+			}
+		}
 	}
 
 	@Override
