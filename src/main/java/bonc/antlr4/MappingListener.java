@@ -97,6 +97,14 @@ public class MappingListener extends sqlBaseListener {
 		}
 	}
 
+	private void visitColumnList(Set<Column> columnSet) {
+		// TODO Auto-generated method stub
+		System.out.println("字段：");
+		for (Column column : columnSet) {
+			System.out.println(column.getColumnName());
+		}
+	}
+
 	/**
 	 * {@inheritDoc}
 	 *
@@ -258,43 +266,39 @@ public class MappingListener extends sqlBaseListener {
 		// 填节点的字段
 		// 填当前节点的
 		List<Column> columnRealList = new ArrayList<Column>();
-		List<Column> columnListMore = new ArrayList<Column>();
+		List<Column> columnOutList = new ArrayList<Column>();
+		Set<Column> columnSetUsed = new HashSet<Column>();// 当前select块需要的from字句的字段，作为表达式节点的端口（表达式节点的端口不允许重复），因此不支持SELECT
+															// USER_ID PACKAGE_ID,PACKAGE_ID PACKAGE_ID FROM
+															// WXWTEST.TEMP
 		boolean isExpression = false;
-		boolean isAlias = false;
 		if (ctx.fromClause().tableSource() != null) {
-			Column col = new Column();
 			for (sqlParser.ColumnContext columnContext : ctx.selectClause().columnlist().column()) {
+				Column col1 = new Column(), col2 = new Column();
 				if (columnContext.fieldExpression().allFields() == null) {
 					if (columnContext.fieldExpression().fieldName() == null) {
-						columnListMore.addAll(visitFieldExpression(columnContext.fieldExpression()));
+						columnSetUsed.addAll(visitFieldExpression(columnContext.fieldExpression()));
 						isExpression = true;
 					} else {
-						col.setColumnName(columnContext.fieldExpression().getText());
-						if (columnContext.alias() != null) { // 有别名的设置，没有的这里也没有什么好办法,暂时和columnName一样。
-							isAlias = true;// 有别名，用表达式节点体现，节点的端口是别名，表达式是字段名????
-							col.setAlias(columnContext.alias().getText());
-						} else {
-							col.setAlias(columnContext.fieldExpression().getText());
-						}
-						columnListMore.add(col);
+						col1.setColumnName(columnContext.fieldExpression().getText());
+						columnSetUsed.add(col1);
 					}
-					col.setColumnName(columnContext.fieldExpression().getText());
+					col2.setExp(columnContext.fieldExpression().getText());
 					if (columnContext.alias() != null) { // 有别名的设置，没有的这里也没有什么好办法,暂时和columnName一样。
-						col.setAlias(columnContext.alias().getText());
+						col2.setAlias(columnContext.alias().getText());
 					} else {
-						col.setAlias(columnContext.fieldExpression().getText());
+						col2.setAlias(null);
 					}
-					columnRealList.add(col);
+					columnRealList.add(col2);
 				} else {
 					// 两个list大小，以及加工映射，后面？的字段表达式为空，默认填字段
-					// 此时columnRealList是select后面的column把*替换后的，column可以由表达式函数构成
+					// 此时columnRealList是select后面的column把*替换后的，col可以由表达式函数、别名构成
 					columnRealList.addAll(ctx.fromClause().tableSource().columnList);
-					// columnListMore *替换后的，表达式函数中包含的字段set。
-					columnListMore.addAll(ctx.fromClause().tableSource().columnList);
+					// columnListMore *替换后的，表达式函数中包含的字段set
+					columnSetUsed.addAll(ctx.fromClause().tableSource().columnList);// 这里可以优化下，既然都*了，那么也不需要做这个循环中的其他事
 				}
 			}
 		}
-		ctx.columnList.addAll(columnListMore);
+		ctx.columnList.addAll(columnSetUsed);// 对于list 注意=和addAll的区别
 		if (ctx.fromClause().tableSource() instanceof sqlParser.SelectjoinContext) {
 			ctx.uuid = UUID.randomUUID().toString();
 			sqlParser.SelectjoinContext selectjoin = (sqlParser.SelectjoinContext) ctx.fromClause().tableSource();
@@ -310,7 +314,7 @@ public class MappingListener extends sqlBaseListener {
 				System.out.print(table.alias + "    ||    ");
 				System.out.println(table.uuid);
 			}
-			visitColumnList(columnListMore);
+			visitColumnList(columnSetUsed);
 			System.out.println("当前节点uuid： " + ctx.uuid);
 			for (int i = 0; i < join_typeList.size(); i++) {
 				System.out.println("JOIN类型： " + join_typeList.get(i).getText() + " JOIN");
@@ -325,12 +329,12 @@ public class MappingListener extends sqlBaseListener {
 		if (ctx.selectAction() != null) {
 			for (sqlParser.SelectActionContext selectAction : ctx.selectAction()) {
 				for (Column col : visitWhere(selectAction.whereClause())) {
-					if (!columnListMore.contains(col))
-						columnListMore.add(col);
+					if (!columnSetUsed.contains(col))
+						columnSetUsed.add(col);
 				}
 				for (Column col : visitOrderBy(selectAction.orderByClause())) {
-					if (!columnListMore.contains(col))
-						columnListMore.add(col);
+					if (!columnSetUsed.contains(col))
+						columnSetUsed.add(col);
 				}
 				// groupby还不知道该怎么做
 				// visitGroupBy(selectAction.groupByClause());
@@ -342,10 +346,10 @@ public class MappingListener extends sqlBaseListener {
 				printWhere(selectAction.whereClause());
 				printOrderBy(selectAction.orderByClause());
 				System.out.println("上一个节点uuid： " + ctx.uuid);
-				visitColumnList(columnListMore);
+				visitColumnList(columnSetUsed);
 				ctx.uuid = UUID.randomUUID().toString();
 				System.out.println("当前节点uuid： " + ctx.uuid);
-				visitColumnList(columnListMore);
+				visitColumnList(columnSetUsed);
 				System.out.println();
 			}
 		}
@@ -353,17 +357,45 @@ public class MappingListener extends sqlBaseListener {
 			System.out.println("表达式节点：");
 			System.out.println("上一个节点uuid： " + ctx.uuid);
 			System.out.println("上一个节点的字段");
-			for (Column col : columnListMore) {
-				System.out.println(col.getColumnName() + " 别名 " + col.getAlias());
+			for (Column col : columnSetUsed) {
+				col.setAlias(col.getColumnName());
+				System.out.println(col.getColumnName());
 			}
-			System.out.println("当前节点的字段");
 			for (Column col : columnRealList) {
-				System.out.println(col.getColumnName() + " 别名 " + col.getAlias());
+				if (col.getAlias() != null) {
+					for (Column col1 : columnSetUsed) {
+						if (col1.getColumnName() == col.getAlias()) {
+							col1.setExp(col.getExp());
+							col.setContained(true);
+							columnOutList.add(col1);
+						}
+					}
+				}
 			}
+			List<String> colList = new ArrayList<String>();
+			System.out.println("当前节点的字段");
+			for (Column col : columnSetUsed) {
+				System.out.println(col.getColumnName() + " 表达式 " + col.getExp());
+				colList.add(col.getColumnName());
+			}
+			String field = "NewField", tmp = "NewField1";
+			int i = 1;
+			for (Column col : columnRealList) {
+				if (!col.isContained()) {
+					if (col.getAlias() != null) {
+						tmp = col.getAlias();
+					} else if (colList.contains(tmp)) {
+						tmp = field + i;
+						i++;
+					}
+					col.setColumnName(tmp);
+					columnOutList.add(col);
+					System.out.println(tmp + " 表达式 " + col.getExp());
+				}
+			}
+			ctx.columnList = columnOutList;
 			ctx.uuid = UUID.randomUUID().toString();
 			System.out.println("当前节点uuid： " + ctx.uuid);
-		} else {
-			// 对字段别名处理？？？
 		}
 	}
 

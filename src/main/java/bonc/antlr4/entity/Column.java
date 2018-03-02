@@ -4,6 +4,9 @@ public class Column {
 	private String columnName;
 	private String type;
 	private String alias;
+	private String exp;
+	private boolean isContained =false;
+	
 	public String getColumnName() {
 		return columnName;
 	}
@@ -21,5 +24,17 @@ public class Column {
 	}
 	public void setAlias(String alias) {
 		this.alias = alias;
+	}
+	public String getExp() {
+		return exp;
+	}
+	public void setExp(String exp) {
+		this.exp = exp;
+	}
+	public boolean isContained() {
+		return isContained;
+	}
+	public void setContained(boolean isContained) {
+		this.isContained = isContained;
 	}
 }
