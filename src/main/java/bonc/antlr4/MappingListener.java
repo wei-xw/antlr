@@ -358,7 +358,7 @@ public class MappingListener extends sqlBaseListener {
 			System.out.println("上一个节点uuid： " + ctx.uuid);
 			System.out.println("上一个节点的字段");
 			for (Column col : columnSetUsed) {
-				col.setAlias(col.getColumnName());
+				col.setExp(col.getColumnName());
 				System.out.println(col.getColumnName());
 			}
 			for (Column col : columnRealList) {
@@ -403,8 +403,6 @@ public class MappingListener extends sqlBaseListener {
 		// TODO Auto-generated method stub
 		Set<Column> hs = new HashSet<Column>();
 		if (orderByClause != null) {
-			System.out.println("排序节点");
-			System.out.println("排序条件：" + orderByClause.orderList().getText());
 			for (sqlParser.OrderItemContext item : orderByClause.orderList().orderItem()) {
 				System.out.println(item.getText());
 				hs.addAll(visitFieldExpression(item.fieldExpression()));
@@ -436,13 +434,9 @@ public class MappingListener extends sqlBaseListener {
 		if (whereClause != null) {
 			if (whereClause instanceof sqlParser.WhereContext) {
 				sqlParser.WhereContext where = (sqlParser.WhereContext) whereClause;
-				System.out.println("筛选节点");
-				System.out.println("筛选条件:" + where.booleanExpression().getText());
 				return visitBooleanExpression(where.booleanExpression());
 			} else {
 				sqlParser.TopContext top = (sqlParser.TopContext) whereClause;
-				System.out.println("top节点");
-				System.out.println("数量:" + top.getText());
 				return new HashSet<Column>();
 			}
 		}
