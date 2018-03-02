@@ -292,7 +292,7 @@ public class MappingListener extends sqlBaseListener {
 				}
 			}
 		}
-		ctx.columnList = columnListMore;
+		ctx.columnList.addAll(columnListMore);
 		if (ctx.fromClause().tableSource() instanceof sqlParser.SelectjoinContext) {
 			ctx.uuid = UUID.randomUUID().toString();
 			sqlParser.SelectjoinContext selectjoin = (sqlParser.SelectjoinContext) ctx.fromClause().tableSource();
@@ -329,7 +329,7 @@ public class MappingListener extends sqlBaseListener {
 				visitGroupBy(selectAction.groupByClause());
 				visitOrderBy(selectAction.orderByClause());
 				System.out.println("上一个节点uuid： " + ctx.uuid);
-				visitColumnList(columnListMore);
+				visitColumnList(ctx.columnList);
 				ctx.uuid = UUID.randomUUID().toString();
 				System.out.println("当前节点uuid： " + ctx.uuid);
 				visitColumnList(columnListMore);
