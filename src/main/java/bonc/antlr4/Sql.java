@@ -1,11 +1,17 @@
 package bonc.antlr4;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import org.antlr.v4.runtime.ANTLRInputStream;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.ParseTreeWalker;
 public class Sql {
 	
-	public static void main(String[] args) {         
+	public static void main(String[] args) {  
+		
 		 String str="INSERT INTO C SELECT * FROM A LEFT JOIN B ON ASDAASFDSVFS";
 		 str="INSERT INTO direct SELECT userid,name FROM D UNION ALL SELECT userid,name FROM B UNION ALL SELECT sex AS userid,userid AS sex,name AS name FROM A ;";
 		 str="INSERT INTO HJ.SRC_D_BCD_ORACLE (USER_ID,PARTITION_ID )SELECT * FROM ( SELECT SourceQulifier_1.USER_ID AS USER_ID, SourceQulifier_1.PARTITION_ID AS PARTITION_ID FROM HJ.DET_D_BCD_ORACLE SourceQulifier_1 LEFT JOIN HJ.SRC_D_BCD_ORACLE_ISOMERY SourceQulifier_3 ON ( SourceQulifier_1.USER_ID = SourceQulifier_3.DAY_ID ) RIGHT JOIN HJ.SRC_D_BCD1227 SourceQulifier_5 ON ( SourceQulifier_1.USER_ID = SourceQulifier_5.USER_ID ))tableA WHERE USER_ID>10 WHERE ROWNUM>10 ORDER BY userid;";
@@ -15,7 +21,7 @@ public class Sql {
 //		 str="INSERT INTO B (USER_ID,PARTITION_ID ) SELECT * FROM (SELECT USER_ID AS userid,PARTITION_ID AS  PARTITION_ID FROM C WHERE USER_ID>0)A WHERE USER_ID>1;";
 		 str="INSERT INTO B (USER_ID,PARTITION_ID )SELECT * FROM ( SELECT concat(a,PARTITION_ID),1+2,count(1), a+1*2+3-4 AS userid,PARTITION_ID AS  PARTITION_ID FROM C WHERE USER_ID>0 WHERE ROWNUM>10 GROUP BY USER_ID )A ORDER BY userid;";
 //		 str="insert into B select a from (select a,b,c from tableB)source1 where b>0 order by c;";
-//		 str="INSERT  INTO HJ.WXW_ANTLR_DIRECT_TEST (USER_ID,PARTITION_ID,BINDSALE_ATTR,EXTRA_DEV_FEE,MPFEE ) SELECT USER_ID AS USER_ID, a AS PARTITION_ID, PARTITION_ID AS BINDSALE_ATTR, BINDSALE_ATTR AS EXTRA_DEV_FEE,EXTRA_DEV_FEE AS MPFEE  FROM (SELECT USER_ID AS USER_ID, CONCAT(PARTITION_ID, 'wwww') AS PARTITION_ID, BINDSALE_ATTR AS BINDSALE_ATTR, EXTRA_DEV_FEE AS EXTRA_DEV_FEE, USER_ID AS a, CONCAT(PARTITION_ID, 'wwww') AS b  FROM HJ.WXW_ANTLR_TEST SourceQulifier_2) Filter_3  WHERE LENGTH(b)>3;";
+		 str="INSERT  INTO HJ.WXW_ANTLR_DIRECT_TEST (USER_ID,PARTITION_ID,BINDSALE_ATTR,EXTRA_DEV_FEE,MPFEE ) SELECT USER_ID AS USER_ID, a AS PARTITION_ID, PARTITION_ID AS BINDSALE_ATTR, BINDSALE_ATTR AS EXTRA_DEV_FEE,EXTRA_DEV_FEE AS MPFEE  FROM (SELECT USER_ID AS USER_ID, CONCAT(PARTITION_ID, 'wwww') AS PARTITION_ID, BINDSALE_ATTR AS BINDSALE_ATTR, EXTRA_DEV_FEE AS EXTRA_DEV_FEE, USER_ID AS a, CONCAT(PARTITION_ID, 'wwww') AS b  FROM HJ.WXW_ANTLR_TEST SourceQulifier_2) Filter_3  WHERE LENGTH(b)>3;";
 	       sqlLexer lexer=new sqlLexer(new ANTLRInputStream(str));
 	       CommonTokenStream tokens =new CommonTokenStream(lexer);
 	       sqlParser parser = new sqlParser(tokens);

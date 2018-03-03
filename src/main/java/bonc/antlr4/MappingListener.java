@@ -2,8 +2,11 @@
 package bonc.antlr4;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
@@ -290,14 +293,14 @@ public class MappingListener extends sqlBaseListener {
 						col2.setExp(columnContext.fieldExpression().getText());
 						if (columnContext.alias() != null) { // 有别名的设置，没有的这里也没有什么好办法,暂时和columnName一样。
 							col2.setAlias(columnContext.alias().getText());
-							if(!columnContext.alias().getText().equals(col2.getExp()))
-								isExpression = true;//columnContext的表达式和别名不相同，例如select b as a ...，则需要表达式节点进行取别名
+							if (!columnContext.alias().getText().equals(col2.getExp()))
+								isExpression = true;// columnContext的表达式和别名不相同，例如select b as a ...，则需要表达式节点进行取别名
 						} else {
 							col2.setAlias(col2.getExp());
 						}
 					}
 					columnRealList.add(col2);
-					
+
 				} else {
 					// 两个list大小，以及加工映射，后面？的字段表达式为空，默认填字段
 					// 此时columnRealList是select后面的column把*替换后的，col可以由表达式函数、别名构成
@@ -373,7 +376,7 @@ public class MappingListener extends sqlBaseListener {
 			for (Column col : columnRealList) {
 				if (col.getAlias() != "") {
 					for (Column col1 : columnSetUsed) {
-						if (col1.getColumnName() == col.getAlias()) {
+						if (col1.getColumnName().equals(col.getAlias())) {
 							col1.setExp(col.getExp());
 							col.setContained(true);
 							columnOutList.add(col1);
@@ -393,10 +396,11 @@ public class MappingListener extends sqlBaseListener {
 				if (!col.isContained()) {
 					if (col.getAlias() != "") {
 						tmp = col.getAlias();
-					} else while (colSet.contains(tmp)) {
-						tmp = field + i;
-						i++;
-					}
+					} else
+						while (colSet.contains(tmp)) {
+							tmp = field + i;
+							i++;
+						}
 					colSet.add(tmp);
 					col.setColumnName(tmp);
 					columnOutList.add(col);
@@ -846,6 +850,23 @@ public class MappingListener extends sqlBaseListener {
 	public void enterSimpleTable(sqlParser.SimpleTableContext ctx) {
 	}
 
+	List<String> colListWXW_ANTLR_DIRECT_TEST = Arrays.asList("USER_ID", "PARTITION_ID", "BINDSALE_ATTR",
+			"EXTRA_DEV_FEE", "MPFEE", "FEEITEM_CODE", "FOREGIFT", "FOREGIFT_CODE", "FOREGIFT_BACKMODE",
+			"AGREEMENT_MONTHS", "END_MODE", "DEVICE_TYPE", "MOBILE_COST", "DEVICE_NAME", "DEVICE_BRAND", "IMEI",
+			"LIST_BANK", "LIST_FEE", "LIST_CODE", "CREDIT_ORG", "CREDIT_TYPE", "CREDIT_CARD_NUM", "AGREEMENT",
+			"PRODUCT_ID", "PACKAGE_ID", "STAFF_ID", "DEPART_ID", "START_DATE", "END_DATE", "REMARK", "ITEM_ID",
+			"MONTH_ID", "DAY_ID");
+	List<String> colListWXW_ANTLR_TEST = Arrays.asList("USER_ID", "PARTITION_ID", "BINDSALE_ATTR", "EXTRA_DEV_FEE",
+			"MPFEE", "FEEITEM_CODE", "FOREGIFT", "FOREGIFT_CODE", "FOREGIFT_BACKMODE", "AGREEMENT_MONTHS", "END_MODE",
+			"DEVICE_TYPE", "MOBILE_COST", "DEVICE_NAME", "DEVICE_BRAND", "IMEI", "LIST_BANK", "LIST_FEE", "LIST_CODE",
+			"CREDIT_ORG", "CREDIT_TYPE", "CREDIT_CARD_NUM", "AGREEMENT", "PRODUCT_ID", "PACKAGE_ID", "STAFF_ID",
+			"DEPART_ID", "START_DATE", "END_DATE", "REMARK", "ITEM_ID", "MONTH_ID", "DAY_ID");
+	Map tableCols = new HashMap<String, List<String>>();
+	{
+		tableCols.put("WXW_ANTLR_DIRECT_TEST", colListWXW_ANTLR_DIRECT_TEST);
+		tableCols.put("WXW_ANTLR_TEST", colListWXW_ANTLR_TEST);
+	}
+
 	/**
 	 * {@inheritDoc}
 	 *
@@ -856,6 +877,12 @@ public class MappingListener extends sqlBaseListener {
 	@Override
 	public void exitSimpleTable(sqlParser.SimpleTableContext ctx) {
 		// ctx.columnAllList=getFrom元数据 //该表的所有字段
+		List<String> colList =(List<String>) tableCols.get(ctx.tableName().IDENTIFIER(ctx.tableName().IDENTIFIER().size()-1).getText());
+		for (String tmp:colList) {
+			Column col =new Column();
+			col.setColumnName(tmp);
+			ctx.columnList.add(col);
+		}
 		ctx.uuid = UUID.randomUUID().toString();
 		ctx.tableName = ctx.tableName().getText();
 		if (ctx.alias() != null)
@@ -865,6 +892,7 @@ public class MappingListener extends sqlBaseListener {
 		System.out.println(" 别名：" + ctx.alias);
 		System.out.println("当前节点uuid： " + ctx.uuid);
 		System.out.println(ctx.columnList.size() + "个字段");
+		visitColumnList(ctx.columnList);
 		System.out.println();
 	}
 
