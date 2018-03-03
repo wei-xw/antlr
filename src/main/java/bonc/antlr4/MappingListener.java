@@ -278,17 +278,26 @@ public class MappingListener extends sqlBaseListener {
 					if (columnContext.fieldExpression().fieldName() == null) {
 						columnSetUsed.addAll(visitFieldExpression(columnContext.fieldExpression()));
 						isExpression = true;
+						col2.setExp(columnContext.fieldExpression().getText());
+						if (columnContext.alias() != null) { // 有别名的设置，没有的这里也没有什么好办法,暂时和columnName一样。
+							col2.setAlias(columnContext.alias().getText());
+						} else {
+							col2.setAlias("");
+						}
 					} else {
 						col1.setColumnName(columnContext.fieldExpression().getText());
 						columnSetUsed.add(col1);
-					}
-					col2.setExp(columnContext.fieldExpression().getText());
-					if (columnContext.alias() != null) { // 有别名的设置，没有的这里也没有什么好办法,暂时和columnName一样。
-						col2.setAlias(columnContext.alias().getText());
-					} else {
-						col2.setAlias(null);
+						col2.setExp(columnContext.fieldExpression().getText());
+						if (columnContext.alias() != null) { // 有别名的设置，没有的这里也没有什么好办法,暂时和columnName一样。
+							col2.setAlias(columnContext.alias().getText());
+							if(!columnContext.alias().getText().equals(col2.getExp()))
+								isExpression = true;//columnContext的表达式和别名不相同，例如select b as a ...，则需要表达式节点进行取别名
+						} else {
+							col2.setAlias(col2.getExp());
+						}
 					}
 					columnRealList.add(col2);
+					
 				} else {
 					// 两个list大小，以及加工映射，后面？的字段表达式为空，默认填字段
 					// 此时columnRealList是select后面的column把*替换后的，col可以由表达式函数、别名构成
@@ -362,7 +371,7 @@ public class MappingListener extends sqlBaseListener {
 				System.out.println(col.getColumnName());
 			}
 			for (Column col : columnRealList) {
-				if (col.getAlias() != null) {
+				if (col.getAlias() != "") {
 					for (Column col1 : columnSetUsed) {
 						if (col1.getColumnName() == col.getAlias()) {
 							col1.setExp(col.getExp());
@@ -372,22 +381,23 @@ public class MappingListener extends sqlBaseListener {
 					}
 				}
 			}
-			List<String> colList = new ArrayList<String>();
+			Set<String> colSet = new HashSet<String>();
 			System.out.println("当前节点的字段");
 			for (Column col : columnSetUsed) {
 				System.out.println(col.getColumnName() + " 表达式 " + col.getExp());
-				colList.add(col.getColumnName());
+				colSet.add(col.getColumnName());
 			}
 			String field = "NewField", tmp = "NewField1";
 			int i = 1;
 			for (Column col : columnRealList) {
 				if (!col.isContained()) {
-					if (col.getAlias() != null) {
+					if (col.getAlias() != "") {
 						tmp = col.getAlias();
-					} else if (colList.contains(tmp)) {
+					} else while (colSet.contains(tmp)) {
 						tmp = field + i;
 						i++;
 					}
+					colSet.add(tmp);
 					col.setColumnName(tmp);
 					columnOutList.add(col);
 					System.out.println(tmp + " 表达式 " + col.getExp());
@@ -396,6 +406,7 @@ public class MappingListener extends sqlBaseListener {
 			ctx.columnList = columnOutList;
 			ctx.uuid = UUID.randomUUID().toString();
 			System.out.println("当前节点uuid： " + ctx.uuid);
+			System.out.println();
 		}
 	}
 
@@ -404,7 +415,6 @@ public class MappingListener extends sqlBaseListener {
 		Set<Column> hs = new HashSet<Column>();
 		if (orderByClause != null) {
 			for (sqlParser.OrderItemContext item : orderByClause.orderList().orderItem()) {
-				System.out.println(item.getText());
 				hs.addAll(visitFieldExpression(item.fieldExpression()));
 			}
 		}
@@ -415,7 +425,7 @@ public class MappingListener extends sqlBaseListener {
 		// TODO Auto-generated method stub
 		if (orderByClause != null) {
 			System.out.println("排序节点");
-			System.out.println("排序条件：" + orderByClause.orderList().getText());
+			System.out.println("排序条件：");
 			for (sqlParser.OrderItemContext item : orderByClause.orderList().orderItem()) {
 				System.out.println(item.getText());
 			}
