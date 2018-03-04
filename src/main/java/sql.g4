@@ -10,7 +10,12 @@ import bonc.antlr4.entity.*;
 prog :dmlStatement SEMI
 ;
 dmlStatement:insertStatement | selectStatement ;
-insertStatement:insertClause selectStatement 
+insertStatement
+locals[
+String uuid;
+public List<Column> columnList = new ArrayList<Column>();
+]
+:insertClause selectStatement 
 ;
 selectStatement 
 locals [

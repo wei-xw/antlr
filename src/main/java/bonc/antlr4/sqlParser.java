@@ -212,6 +212,8 @@ public class sqlParser extends Parser {
 	}
 
 	public static class InsertStatementContext extends ParserRuleContext {
+		public String uuid;
+		public List<Column> columnList = new ArrayList<Column>();;
 		public InsertClauseContext insertClause() {
 			return getRuleContext(InsertClauseContext.class,0);
 		}

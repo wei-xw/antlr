@@ -14,10 +14,14 @@ import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ErrorNode;
 import org.antlr.v4.runtime.tree.TerminalNode;
 
+import com.bonc.dataplatform.repository.mapping.vo.ETLCodeWidgetAttrView;
 import com.bonc.dataplatform.repository.mapping.vo.ETLMappingProxyResource;
 import com.bonc.dataplatform.repository.mapping.vo.ETLMappingView;
 import com.bonc.dataplatform.repository.mapping.vo.ETLWidgetDepsView;
+import com.bonc.dataplatform.repository.mapping.vo.ETLWidgetFieldView;
 import com.bonc.dataplatform.repository.mapping.vo.ETLWidgetInstView;
+import com.bonc.dataplatform.repository.mapping.vo.ETLWidgetView;
+import com.bonc.dataplatform.repository.workflow.vo.ETLCodeAttrValView;
 
 import bonc.antlr4.entity.Column;
 
@@ -106,12 +110,18 @@ public class MappingListener extends sqlBaseListener {
 	 */
 	@Override
 	public void exitInsertStatement(sqlParser.InsertStatementContext ctx) {
+		ETLWidgetInstView e = new ETLWidgetInstView();
+		widgetInsts.add(e);
 		System.out.println("目标节点");
 		System.out.println("上一个节点uuid： " + ctx.selectStatement().uuid);
 		System.out.println("当前节点字段:");
 		visitInsertClause(ctx.insertClause());
-		System.out.println("当前节点uuid： " + UUID.randomUUID());
+		String uuid=UUID.randomUUID().toString();
+		System.out.println("当前节点uuid： " + uuid);
 		visitColumnList(ctx.selectStatement().columnList);
+		e.setWidgetInstId(uuid);
+		e.setWidgetType("m3102");
+		e.setInstancName(ctx.getText());
 	}
 
 	private void visitColumnList(List<Column> columnList) {
@@ -376,14 +386,28 @@ public class MappingListener extends sqlBaseListener {
 			// 简单实现的，所以用了两个for循环，一个存字段，一个打印，之后是往xml对象里存，一个for就可以办到。
 			for (sqlParser.SelectActionContext selectAction : ctx.selectAction()) {
 				// groupby还不知道该怎么做
+				ETLWidgetInstView e = new ETLWidgetInstView();
+				widgetInsts.add(e);
 				printGroupBy(selectAction.groupByClause());
-				printWhere(selectAction.whereClause());
-				printOrderBy(selectAction.orderByClause());
+				printWhere(selectAction.whereClause(),e);
+//				printOrderBy(selectAction.orderByClause(),e);
 				System.out.println("上一个节点uuid： " + ctx.uuid);
 				visitColumnList(columnSetUsed);
 				ctx.uuid = UUID.randomUUID().toString();
 				System.out.println("当前节点uuid： " + ctx.uuid);
+				e.setOid(ctx.uuid);
+				e.setWidgetInstId(ctx.uuid);
 				visitColumnList(columnSetUsed);
+				List<ETLWidgetFieldView> widgetFields=new ArrayList<ETLWidgetFieldView>();
+				e.getWidget().setWidgetFields(widgetFields);
+				for(Column col :ctx.columnList) {
+					ETLWidgetFieldView eTLWidgetFieldView =new ETLWidgetFieldView(col.getColumnName(), col.getColumnName(), 255,
+							0, 95442,3, 0,
+							0, "", "","","","",col.getColumnName(),1);
+					eTLWidgetFieldView.setSortType(0);
+					widgetFields.add(eTLWidgetFieldView);
+				}
+				e.getWidget().setIsReusable(0);
 				System.out.println();
 			}
 		}
@@ -479,13 +503,31 @@ public class MappingListener extends sqlBaseListener {
 		return new HashSet<Column>();
 	}
 
-	private void printWhere(sqlParser.WhereClauseContext whereClause) {
+	private void printWhere(sqlParser.WhereClauseContext whereClause,ETLWidgetInstView e) {
 		// TODO Auto-generated method stub
 		if (whereClause != null) {
 			if (whereClause instanceof sqlParser.WhereContext) {
 				sqlParser.WhereContext where = (sqlParser.WhereContext) whereClause;
 				System.out.println("筛选节点");
 				System.out.println("筛选条件:" + where.booleanExpression().getText());
+				e.setWidgetType("3106");
+				e.setInstancName("筛选器转换1");
+				ETLWidgetView widget3106=new ETLWidgetView();
+				e.setWidget(widget3106);
+				widget3106.setOid(e.getOid());
+				widget3106.setWidgetName("筛选器转换1");
+				widget3106.setWidgetType("m3106");
+				List<ETLCodeWidgetAttrView> widgetAttrs=new ArrayList<ETLCodeWidgetAttrView>();
+				ETLCodeWidgetAttrView eTLCodeWidgetAttrView =new ETLCodeWidgetAttrView("m3106",66, "2","3","过滤条件",
+						where.booleanExpression().getText(), null, 0, 66,"筛选条件");
+				eTLCodeWidgetAttrView.setAttrCode("1");
+				eTLCodeWidgetAttrView.setBitflags("0");
+				widgetAttrs.add(eTLCodeWidgetAttrView);
+				widget3106.setWidgetAttrs(widgetAttrs);
+				
+				
+				
+				
 			} else {
 				sqlParser.TopContext top = (sqlParser.TopContext) whereClause;
 				System.out.println("top节点");
@@ -913,6 +955,8 @@ public class MappingListener extends sqlBaseListener {
 		ctx.uuid = UUID.randomUUID().toString();
 		e3101.setWidgetInstId(ctx.uuid);
 		ctx.uuid = UUID.randomUUID().toString();
+		e3103.setWidgetInstId(ctx.uuid);
+		
 		ctx.tableName = ctx.tableName().getText();
 		if (ctx.alias() != null)
 			ctx.alias = ctx.alias().getText();
@@ -923,7 +967,81 @@ public class MappingListener extends sqlBaseListener {
 		System.out.println(ctx.columnList.size() + "个字段");
 		visitColumnList(ctx.columnList);
 		System.out.println();
-
+		e3101.setWidgetType("m3101");
+		e3101.setInstancName("a22b7bcef62f464a95af68b38e462627_1");
+		ETLWidgetView widget3101=new ETLWidgetView(),widget3103=new ETLWidgetView();
+		e3101.setWidget(widget3101);
+		widget3101.setOid("88406491");
+		widget3101.setWidgetName("a22b7bcef62f464a95af68b38e462627");
+		widget3101.setWidgetType("m3101");
+		widget3101.setModelId("m6");
+		List<ETLWidgetFieldView> widgetFields=new ArrayList<ETLWidgetFieldView>();
+		widget3101.setWidgetFields(widgetFields);
+		for(Column col :ctx.columnList) {
+			ETLWidgetFieldView eTLWidgetFieldView =new ETLWidgetFieldView(col.getColumnName(), col.getColumnName(), 255,
+					0, 95442,3, 0,
+					0, "", "","","","","", 1);
+			eTLWidgetFieldView.setSortType(0);
+			widgetFields.add(eTLWidgetFieldView);
+		}
+		widget3101.setIsReusable(0);
+		widget3101.setOwner(ctx.tableName().IDENTIFIER(0).getText());//不对哦
+		e3103.setWidgetType("m3103");
+		e3103.setInstancName(ctx.tableName().IDENTIFIER(ctx.tableName().IDENTIFIER().size()-1).getText());
+		e3103.setWidget(widget3103);
+		widget3103.setOid(ctx.uuid);
+		widget3103.setWidgetName(ctx.tableName().IDENTIFIER(ctx.tableName().IDENTIFIER().size()-1).getText());
+		widget3103.setWidgetType("m3103");
+		widget3103.setModelId("m6");
+		List<ETLCodeWidgetAttrView> widgetAttrs =new ArrayList<ETLCodeWidgetAttrView>();
+		ETLCodeWidgetAttrView eTLCodeWidgetAttrView =new ETLCodeWidgetAttrView();
+		eTLCodeWidgetAttrView.setObjectType("m3103");
+		eTLCodeWidgetAttrView.setAttrId(51);
+		eTLCodeWidgetAttrView.setAttrType("3");
+		eTLCodeWidgetAttrView.setAttrName("预处理脚本");
+		eTLCodeWidgetAttrView.setParentId(0);
+		eTLCodeWidgetAttrView.setOrd(1);
+		eTLCodeWidgetAttrView.setAttrComment("可以设置合理的分区、索引、排序条件，有助于提高执行效率.例如 month_id='201611' 或者 limit 10 或者order by ID .源转换是hive表并且执行引擎为pig的情况不支持预处理脚本");
+		eTLCodeWidgetAttrView.setAttrCode("1");
+		eTLCodeWidgetAttrView.setBitflags("0");
+		widgetAttrs.add(eTLCodeWidgetAttrView);
+		ETLCodeWidgetAttrView eTLCodeWidgetAttrView1 =new ETLCodeWidgetAttrView();
+		eTLCodeWidgetAttrView1.setObjectType("m3103");
+		eTLCodeWidgetAttrView1.setAttrId(227);
+		eTLCodeWidgetAttrView1.setAttrType("3");
+		eTLCodeWidgetAttrView1.setAttrName("源对象名称");
+		eTLCodeWidgetAttrView1.setAttrVal(ctx.tableName().IDENTIFIER(ctx.tableName().IDENTIFIER().size()-1).getText());
+		eTLCodeWidgetAttrView1.setParentId(0);
+		eTLCodeWidgetAttrView1.setOrd(11);
+		eTLCodeWidgetAttrView1.setAttrComment("若是文件，文件名称支持正则表达式");
+		eTLCodeWidgetAttrView1.setAttrCode("11");
+		eTLCodeWidgetAttrView1.setBitflags("0");
+		widgetAttrs.add(eTLCodeWidgetAttrView1);
+		ETLCodeWidgetAttrView eTLCodeWidgetAttrView2 =new ETLCodeWidgetAttrView();
+		eTLCodeWidgetAttrView2.setObjectType("m3103");
+		eTLCodeWidgetAttrView2.setAttrId(240);
+		eTLCodeWidgetAttrView2.setAttrType("3");
+		eTLCodeWidgetAttrView2.setAttrDataType("3");
+		eTLCodeWidgetAttrView2.setAttrName("表的所属用户");
+		eTLCodeWidgetAttrView2.setAttrVal(ctx.tableName().IDENTIFIER(0).getText());
+		eTLCodeWidgetAttrView2.setParentId(0);
+		eTLCodeWidgetAttrView2.setOrd(12);
+		eTLCodeWidgetAttrView2.setAttrComment("表的所属用户");
+		eTLCodeWidgetAttrView2.setAttrCode("12");
+		eTLCodeWidgetAttrView2.setBitflags("0");
+		widgetAttrs.add(eTLCodeWidgetAttrView2);
+		widget3103.setWidgetAttrs(widgetAttrs);
+		List<ETLWidgetFieldView> widgetFields3103=new ArrayList<ETLWidgetFieldView>();
+		widget3103.setWidgetFields(widgetFields3103);
+		for(Column col :ctx.columnList) {
+			ETLWidgetFieldView eTLWidgetFieldView =new ETLWidgetFieldView(col.getColumnName(), col.getColumnName(), 255,
+					0, 95442,3, 0,
+					0, "", "","","","","", 1);
+			eTLWidgetFieldView.setSortType(0);
+			widgetFields3103.add(eTLWidgetFieldView);
+		}
+		widget3101.setIsReusable(0);
+		widget3101.setOwner(ctx.tableName().IDENTIFIER(0).getText());//不对哦
 	}
 
 	/**
