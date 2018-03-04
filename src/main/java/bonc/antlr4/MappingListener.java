@@ -14,11 +14,33 @@ import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ErrorNode;
 import org.antlr.v4.runtime.tree.TerminalNode;
 
+import com.bonc.dataplatform.repository.mapping.vo.ETLMappingProxyResource;
+import com.bonc.dataplatform.repository.mapping.vo.ETLMappingView;
+import com.bonc.dataplatform.repository.mapping.vo.ETLWidgetDepsView;
+import com.bonc.dataplatform.repository.mapping.vo.ETLWidgetInstView;
+
 import bonc.antlr4.entity.Column;
 
 //尽量对于每个节点只对其父节点和子节点进行操作，防止太复杂。
 //对于语法规则有多个分支的情况，该规则对于外层的规则来说，不管什么分支，表现应一样
 public class MappingListener extends sqlBaseListener {
+	ETLMappingView etl = new ETLMappingView();
+	List<ETLWidgetInstView> widgetInsts = new ArrayList<ETLWidgetInstView>();
+	List<ETLWidgetDepsView> widgetDeps = new ArrayList<ETLWidgetDepsView>();
+	{
+		etl.setOid("f03427ae-53f2-472c-bc44-d2344c04396a");
+		etl.setMappingName("wxwimport");
+		etl.setExecuteType(0);
+		ETLMappingProxyResource proxyResource = new ETLMappingProxyResource();
+		proxyResource.setPort(0);
+		etl.setProxyResource(proxyResource);
+		etl.setMappingType(0);
+		etl.setCoord(
+				"<?xml version=\\\"1.0\\\"?><VertexsAddr xmlns:xsi=\\\"http://www.w3.org/2001/XMLSchema-instance\\\" xmlns:xsd=\\\"http://www.w3.org/2001/XMLSchema\\\"><VertexAddrs><VertexAddr><vertexId>af1faf8b-5ac0-4cec-8545-e3c7b25a9a63<\\/vertexId><x>403<\\/x><y>376<\\/y><lengh>150<\\/lengh><width>200<\\/width><isExpand>false<\\/isExpand><\\/VertexAddr><VertexAddr><vertexId>9d2e7829-7d4c-4b2d-8153-3a5ce1871d93<\\/vertexId><x>621<\\/x><y>421<\\/y><lengh>150<\\/lengh><width>200<\\/width><isExpand>false<\\/isExpand><\\/VertexAddr><VertexAddr><vertexId>cb2fe982-bf60-4685-922b-69a76e57af41<\\/vertexId><x>825<\\/x><y>441<\\/y><lengh>150<\\/lengh><width>200<\\/width><isExpand>false<\\/isExpand><\\/VertexAddr><VertexAddr><vertexId>63c34ca5-aa7f-40f3-a3ab-5380f882aa1b<\\/vertexId><x>1025<\\/x><y>457<\\/y><lengh>150<\\/lengh><width>200<\\/width><isExpand>false<\\/isExpand><\\/VertexAddr><VertexAddr><vertexId>bc238946-25ab-4d89-97e1-279053842f5f<\\/vertexId><x>248<\\/x><y>376<\\/y><lengh>150<\\/lengh><width>200<\\/width><isExpand>false<\\/isExpand><\\/VertexAddr><\\/VertexAddrs><\\/VertexsAddr>");
+		etl.setDirId("88084829");
+		etl.setWidgetInsts(widgetInsts);
+		etl.setWidgetDeps(widgetDeps);
+	}
 
 	/**
 	 * {@inheritDoc}
@@ -877,12 +899,19 @@ public class MappingListener extends sqlBaseListener {
 	@Override
 	public void exitSimpleTable(sqlParser.SimpleTableContext ctx) {
 		// ctx.columnAllList=getFrom元数据 //该表的所有字段
-		List<String> colList =(List<String>) tableCols.get(ctx.tableName().IDENTIFIER(ctx.tableName().IDENTIFIER().size()-1).getText());
-		for (String tmp:colList) {
-			Column col =new Column();
+		List<String> colList = (List<String>) tableCols
+				.get(ctx.tableName().IDENTIFIER(ctx.tableName().IDENTIFIER().size() - 1).getText());
+		for (String tmp : colList) {
+			Column col = new Column();
 			col.setColumnName(tmp);
 			ctx.columnList.add(col);
 		}
+		ETLWidgetInstView e3101 = new ETLWidgetInstView(), e3103 = new ETLWidgetInstView();
+		widgetInsts.add(e3101);
+		widgetInsts.add(e3103);
+		
+		ctx.uuid = UUID.randomUUID().toString();
+		e3101.setWidgetInstId(ctx.uuid);
 		ctx.uuid = UUID.randomUUID().toString();
 		ctx.tableName = ctx.tableName().getText();
 		if (ctx.alias() != null)
@@ -894,6 +923,7 @@ public class MappingListener extends sqlBaseListener {
 		System.out.println(ctx.columnList.size() + "个字段");
 		visitColumnList(ctx.columnList);
 		System.out.println();
+
 	}
 
 	/**

@@ -21,7 +21,7 @@ public class Sql {
 //		 str="INSERT INTO B (USER_ID,PARTITION_ID ) SELECT * FROM (SELECT USER_ID AS userid,PARTITION_ID AS  PARTITION_ID FROM C WHERE USER_ID>0)A WHERE USER_ID>1;";
 		 str="INSERT INTO B (USER_ID,PARTITION_ID )SELECT * FROM ( SELECT concat(a,PARTITION_ID),1+2,count(1), a+1*2+3-4 AS userid,PARTITION_ID AS  PARTITION_ID FROM C WHERE USER_ID>0 WHERE ROWNUM>10 GROUP BY USER_ID )A ORDER BY userid;";
 //		 str="insert into B select a from (select a,b,c from tableB)source1 where b>0 order by c;";
-		 str="INSERT  INTO HJ.WXW_ANTLR_DIRECT_TEST (USER_ID,PARTITION_ID,BINDSALE_ATTR,EXTRA_DEV_FEE,MPFEE ) SELECT USER_ID AS USER_ID, a AS PARTITION_ID, PARTITION_ID AS BINDSALE_ATTR, BINDSALE_ATTR AS EXTRA_DEV_FEE,EXTRA_DEV_FEE AS MPFEE  FROM (SELECT USER_ID AS USER_ID, CONCAT(PARTITION_ID, 'wwww') AS PARTITION_ID, BINDSALE_ATTR AS BINDSALE_ATTR, EXTRA_DEV_FEE AS EXTRA_DEV_FEE, USER_ID AS a, CONCAT(PARTITION_ID, 'wwww') AS b  FROM HJ.WXW_ANTLR_TEST SourceQulifier_2) Filter_3  WHERE LENGTH(b)>3;";
+		 str=" INSERT  INTO HJ.WXW_ANTLR_DIRECT_TEST (USER_ID,PARTITION_ID,BINDSALE_ATTR,EXTRA_DEV_FEE,MPFEE ) SELECT USER_ID AS USER_ID, a AS PARTITION_ID, PARTITION_ID AS BINDSALE_ATTR, BINDSALE_ATTR AS EXTRA_DEV_FEE, MPFEE AS MPFEE  FROM (SELECT USER_ID AS USER_ID, CONCAT(PARTITION_ID, 'wwwwww') AS PARTITION_ID, BINDSALE_ATTR AS BINDSALE_ATTR, LENGTH(MPFEE) AS b, MPFEE AS MPFEE, USER_ID AS a  FROM HJ.WXW_ANTLR_TEST SourceQulifier_1) Filter_3  WHERE b>3 ;";
 	       sqlLexer lexer=new sqlLexer(new ANTLRInputStream(str));
 	       CommonTokenStream tokens =new CommonTokenStream(lexer);
 	       sqlParser parser = new sqlParser(tokens);
@@ -31,7 +31,7 @@ public class Sql {
 //	       eval.visit(tree);  
 	       ParseTreeWalker walker = new  ParseTreeWalker();
 	       MappingListener listen =new MappingListener();
-	       walker.walk(listen,tree);
+	       walker.walk(listen,tree); 
 	      
 	}
 

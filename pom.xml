@@ -26,5 +26,16 @@
 			<artifactId>antlr4-runtime</artifactId>
 			<version>4.7.1</version>
 		</dependency>
+		<dependency>
+			<groupId>net.sf.json-lib</groupId>
+			<artifactId>json-lib</artifactId>
+			<version>2.4</version>
+			<classifier>jdk15</classifier>
+		</dependency>
+		<dependency>
+			<groupId>com.bonc.bdc</groupId>
+			<artifactId>bdc-common</artifactId>
+			<version>3.2-SNAPSHOT</version>
+		</dependency>
 	</dependencies>
 </project>
