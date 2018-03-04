@@ -70,12 +70,12 @@ public class MappingListener extends sqlBaseListener {
 	 */
 	@Override
 	public void exitProg(sqlParser.ProgContext ctx) {
-		 JSONObject jObject=new JSONObject();
-		 jObject.put("aa",etl);
+		 JSONObject jObject=JSONObject.fromObject(etl);
 		 FileWriter fw = null;
 			try {
 				fw = new FileWriter("/home/wxw/result/a.json");
 				fw.write(jObject.toString());
+				fw.flush();
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
@@ -129,22 +129,24 @@ public class MappingListener extends sqlBaseListener {
 		widgetInsts.add(e);
 		System.out.println("目标节点");
 		System.out.println("上一个节点uuid： " + ctx.selectStatement().uuid);
-		System.out.println("当前节点字段:");
-		visitInsertClause(ctx.insertClause());
+		String fromFieldUid =ctx.selectStatement().uuid;
+		
+//		visitInsertClause(ctx.insertClause());
 		ctx.uuid=UUID.randomUUID().toString();
 		visitColumnList(ctx.selectStatement().columnList);
 		System.out.println("当前节点uuid： " + ctx.uuid);
 		List<String> colList = (List<String>) tableCols
 				.get(ctx.insertClause().tableName().IDENTIFIER(ctx.insertClause().tableName().IDENTIFIER().size() - 1).getText());
+		System.out.println("当前节点字段:");
 		for (String tmp : colList) {
 			Column col = new Column();
 			col.setColumnName(tmp);
 			ctx.columnList.add(col);
 		}
-		
+		visitColumnList(ctx.columnList);
 		e.setWidgetInstId(ctx.uuid);
 		e.setWidgetType("m3102");
-		e.setInstancName(ctx.getText());
+		e.setInstancName(ctx.insertClause().tableName().IDENTIFIER(ctx.insertClause().tableName().IDENTIFIER().size() - 1).getText());
 		ETLWidgetView widget=new ETLWidgetView();
 		e.setWidget(widget);
 		widget.setOid("88406570");
@@ -195,6 +197,12 @@ public class MappingListener extends sqlBaseListener {
 		}
 		widget.setIsReusable(0);
 		widget.setOwner(ctx.insertClause().tableName().IDENTIFIER(0).getText());// 不对哦
+		for(int i=0;i<ctx.selectStatement().columnList.size();i++) {
+			ETLWidgetDepsView eTLWidgetDepsView= new ETLWidgetDepsView(fromFieldUid, ctx.selectStatement().columnList.get(i).getColumnName(),
+					ctx.columnList.get(i).getColumnName(),ctx.uuid);
+			widgetDeps.add(eTLWidgetDepsView);
+		}
+		
 	}
 
 	private void visitColumnList(List<Column> columnList) {
@@ -465,6 +473,7 @@ public class MappingListener extends sqlBaseListener {
 				printWhere(selectAction.whereClause(), e);
 				// printOrderBy(selectAction.orderByClause(),e);
 				System.out.println("上一个节点uuid： " + ctx.uuid);
+				String fromFieldUid=ctx.uuid;
 				visitColumnList(columnSetUsed);
 				ctx.uuid = UUID.randomUUID().toString();
 				System.out.println("当前节点uuid： " + ctx.uuid);
@@ -478,6 +487,9 @@ public class MappingListener extends sqlBaseListener {
 							col.getColumnName(), 255, 0, 95442, 3, 0, 0, "", "", "", "", "", col.getColumnName(), 1);
 					eTLWidgetFieldView.setSortType(0);
 					widgetFields.add(eTLWidgetFieldView);
+					ETLWidgetDepsView eTLWidgetDepsView= new ETLWidgetDepsView(fromFieldUid, col.getColumnName(),
+							ctx.uuid,col.getColumnName());
+					widgetDeps.add(eTLWidgetDepsView);
 				}
 				e.getWidget().setIsReusable(0);
 				System.out.println();
@@ -994,6 +1006,7 @@ public class MappingListener extends sqlBaseListener {
 			"DEVICE_TYPE", "MOBILE_COST", "DEVICE_NAME", "DEVICE_BRAND", "IMEI", "LIST_BANK", "LIST_FEE", "LIST_CODE",
 			"CREDIT_ORG", "CREDIT_TYPE", "CREDIT_CARD_NUM", "AGREEMENT", "PRODUCT_ID", "PACKAGE_ID", "STAFF_ID",
 			"DEPART_ID", "START_DATE", "END_DATE", "REMARK", "ITEM_ID", "MONTH_ID", "DAY_ID");
+	
 	Map tableCols = new HashMap<String, List<String>>();
 	{
 		tableCols.put("WXW_ANTLR_DIRECT_TEST", colListWXW_ANTLR_DIRECT_TEST);
@@ -1108,6 +1121,9 @@ public class MappingListener extends sqlBaseListener {
 					255, 0, 95442, 3, 0, 0, "", "", "", "", "", "", 1);
 			eTLWidgetFieldView.setSortType(0);
 			widgetFields3103.add(eTLWidgetFieldView);
+			ETLWidgetDepsView eTLWidgetDepsView= new ETLWidgetDepsView(e3101.getWidgetInstId(), col.getColumnName(),
+					e3103.getWidgetInstId(),col.getColumnName());
+			widgetDeps.add(eTLWidgetDepsView);
 		}
 		widget3101.setIsReusable(0);
 		widget3101.setOwner(ctx.tableName().IDENTIFIER(0).getText());// 不对哦
