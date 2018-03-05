@@ -2,6 +2,9 @@
 
 package bonc.antlr4;
 import bonc.antlr4.entity.*;
+import java.util.HashSet;
+import java.util.Set;
+
 
 import org.antlr.v4.runtime.atn.*;
 import org.antlr.v4.runtime.dfa.DFA;
@@ -436,6 +439,7 @@ public class sqlParser extends Parser {
 	public static class SelectQueryBlockContext extends ParserRuleContext {
 		public String uuid;
 		public List<Column> columnList = new ArrayList<Column>();
+		public Set<Column> columnSet = new HashSet<Column>();
 		public void dd(){
 		};
 		public SelectClauseContext selectClause() {
