@@ -226,7 +226,6 @@ public class MappingListener extends sqlBaseListener {
 					ctx.columnList.get(i).getColumnName());
 			widgetDeps.add(eTLWidgetDepsView);
 		}
-
 	}
 
 	private void visitColumnList(List<Column> columnList) {
@@ -427,7 +426,8 @@ public class MappingListener extends sqlBaseListener {
 					} else {
 						col1.setColumnName(columnContext.fieldExpression().getText());
 						columnSetUsed.add(col1);
-						col2.setExp(columnContext.fieldExpression().getText());
+						col2.setExp(columnContext.fieldExpression().fieldName().getText());
+						col2.setColumnName(col2.getExp());
 						if (columnContext.alias() != null) { // 有别名的设置，没有的这里也没有什么好办法,暂时和columnName一样。
 							col2.setAlias(columnContext.alias().getText());
 							if (!columnContext.alias().getText().equals(col2.getExp()))
@@ -437,7 +437,6 @@ public class MappingListener extends sqlBaseListener {
 						}
 					}
 					columnRealList.add(col2);
-
 				} else {
 					// 两个list大小，以及加工映射，后面？的字段表达式为空，默认填字段
 					// 此时columnRealList是select后面的column把*替换后的，col可以由表达式函数、别名构成
@@ -501,12 +500,14 @@ public class MappingListener extends sqlBaseListener {
 				visitColumnList(columnSetUsed);
 				ctx.uuid = UUID.randomUUID().toString();
 				System.out.println("当前节点uuid： " + ctx.uuid);
+				VertexAddrs.add(new VertexAddr(ctx.uuid, x += 50, y += 50, length, width, false));
 				e.setOid(ctx.uuid);
 				e.setWidgetInstId(ctx.uuid);
+				e.getWidget().setOid(ctx.uuid);
 				visitColumnList(columnSetUsed);
 				List<ETLWidgetFieldView> widgetFields = new ArrayList<ETLWidgetFieldView>();
 				e.getWidget().setWidgetFields(widgetFields);
-				for (Column col : ctx.columnList) {
+				for (Column col : columnSetUsed) {
 					ETLWidgetFieldView eTLWidgetFieldView = new ETLWidgetFieldView(col.getColumnName(),
 							col.getColumnName(), 255, 0, 95442, 3, 0, 0, "", "", "", "", "", col.getColumnName(), 1);
 					eTLWidgetFieldView.setSortType(0);
@@ -618,7 +619,7 @@ public class MappingListener extends sqlBaseListener {
 				sqlParser.WhereContext where = (sqlParser.WhereContext) whereClause;
 				System.out.println("筛选节点");
 				System.out.println("筛选条件:" + where.booleanExpression().getText());
-				e.setWidgetType("3106");
+				e.setWidgetType("m3106");
 				e.setInstancName("筛选器转换1");
 				ETLWidgetView widget3106 = new ETLWidgetView();
 				e.setWidget(widget3106);
