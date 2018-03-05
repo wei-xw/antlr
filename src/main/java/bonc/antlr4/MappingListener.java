@@ -28,6 +28,7 @@ import com.thoughtworks.xstream.XStream;
 
 import bonc.antlr4.entity.VertexAddr;
 import bonc.antlr4.entity.Column;
+import bonc.antlr4.entity.Count;
 import net.sf.json.JSONObject;
 
 //尽量对于每个节点只对其父节点和子节点进行操作，防止太复杂。
@@ -37,6 +38,12 @@ public class MappingListener extends sqlBaseListener {
 	List<ETLWidgetInstView> widgetInsts = new ArrayList<ETLWidgetInstView>();
 	List<ETLWidgetDepsView> widgetDeps = new ArrayList<ETLWidgetDepsView>();
 	List<VertexAddr> VertexAddrs = new ArrayList<VertexAddr>();
+	Map nodeName=new HashMap<String,Count>();
+	{
+		nodeName.put("m3106", new Count());
+		nodeName.put("m3102",new Count());
+		nodeName.put("m3101",new Count());
+	}
 	String vertexId;
 	int x = 100;
 	int y = 100;
@@ -620,11 +627,13 @@ public class MappingListener extends sqlBaseListener {
 				System.out.println("筛选节点");
 				System.out.println("筛选条件:" + where.booleanExpression().getText());
 				e.setWidgetType("m3106");
-				e.setInstancName("筛选器转换1");
+				int idex=((Count) nodeName.get("m3106")).getI();
+				e.setInstancName("筛选器转换"+idex);
 				ETLWidgetView widget3106 = new ETLWidgetView();
 				e.setWidget(widget3106);
 				widget3106.setOid(e.getOid());
-				widget3106.setWidgetName("筛选器转换1");
+				widget3106.setWidgetName("筛选器转换"+idex);
+				((Count) nodeName.get("m3106")).setI(++idex);
 				widget3106.setWidgetType("m3106");
 				List<ETLCodeWidgetAttrView> widgetAttrs = new ArrayList<ETLCodeWidgetAttrView>();
 				ETLCodeWidgetAttrView eTLCodeWidgetAttrView = new ETLCodeWidgetAttrView("m3106", 66, "2", "3", "过滤条件",
@@ -647,7 +656,7 @@ public class MappingListener extends sqlBaseListener {
 	}
 
 	/**
-	 * {@inheritDoc}
+	 * {@inheritDoc}I
 	 *
 	 * <p>
 	 * The default implementation does nothing.
