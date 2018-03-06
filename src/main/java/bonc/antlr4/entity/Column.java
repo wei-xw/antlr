@@ -6,11 +6,16 @@ public class Column {
 	private String alias = "";
 	private String exp;
 	private boolean isContained = false;
-	private String tableOrAlias="";//字段所属的表或子查询的别名，之后需要考虑表+字段唯一确定一个Column类，即hashCode()、equals()方法得改
+	private String tableOrAlias="";//字段所属的表或子查询的别名，之后需要考虑表+字段唯一确定一个Column类,或者建一个表的类，表对象的引用，即hashCode()、equals()方法得改
 	public String getColumnName() {
 		return columnName;
 	}
-
+	public Column() {
+		super();
+	}
+	public Column(String columnName) {
+		this.columnName=columnName;
+	}
 	public void setColumnName(String columnName) {
 		this.columnName = columnName;
 	}

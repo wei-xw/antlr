@@ -226,7 +226,15 @@ public class MappingListener extends sqlBaseListener {
 			widgetFields.add(eTLWidgetFieldView);
 		}
 		widget.setIsReusable(0);
+		List<Column> tmpList=visitInsertClause(ctx.insertClause());
+		if(tmpList!=null) {
+			ctx.columnList=tmpList;
+		}
 		widget.setOwner(ctx.insertClause().tableName().database().getText());// 不对哦
+		if(ctx.columnList.size()!=ctx.selectStatement().columnList.size()) {
+			System.out.println("insert子句和select子句的字段数量不同");
+			return;
+		}
 		for (int i = 0; i < ctx.selectStatement().columnList.size(); i++) {
 			ETLWidgetDepsView eTLWidgetDepsView = new ETLWidgetDepsView(fromFieldUid,
 					ctx.selectStatement().columnList.get(i).getColumnName(), ctx.uuid,
@@ -297,15 +305,17 @@ public class MappingListener extends sqlBaseListener {
 		ctx.uuid = ctx.selectQueryBlock().uuid;
 	}
 
-	private void visitInsertClause(sqlParser.InsertClauseContext insertClause) {
+	private List<Column> visitInsertClause(sqlParser.InsertClauseContext insertClause) {
 		// TODO Auto-generated method stub
 		if (insertClause.columnlist() != null) {
+			List<Column> columnList=new ArrayList<Column>();
 			for (sqlParser.ColumnContext column : insertClause.columnlist().column()) {
-				System.out.println(column.fieldExpression().fieldName().getText());
+				Column col=new Column(column.fieldExpression().fieldName().getText());
+				columnList.add(col);
 			}
-		} else {
-			System.out.println("sql中没有insert字句的字段，需要查询元数据");
-		}
+			return columnList;
+		} else 
+			return null;
 	}
 
 	/**
