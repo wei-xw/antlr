@@ -6,6 +6,9 @@ package bonc.antlr4;
 @parser::header{
 package bonc.antlr4;
 import bonc.antlr4.entity.*;
+import java.util.HashSet;
+import java.util.Set;
+
 }
 prog :dmlStatement SEMI
 ;
@@ -24,20 +27,20 @@ public List<Column> columnList = new ArrayList<Column>()
 ]
 :unionQuery orderByClause?                     #union
 |selectQueryBlock                                             #select
-
 ;
-unionQuery: selectQueryBlock (KW_UNION KW_ALL? selectQueryBlock)+
+unionQuery: (selectClause fromClause (whereClause|groupByClause)?) (KW_UNION KW_ALL? (selectClause fromClause (whereClause|groupByClause)?))+
 ;
 selectQueryBlock 
 locals [
 String uuid;
 public List<Column> columnList = new ArrayList<Column>();
+public Set<Column> columnSet = new HashSet<Column>();
 public void dd(){
 }
 ]
 : selectClause fromClause (selectAction)*
 ;
-selectAction : whereClause 
+selectAction : whereClause
 |groupByClause
 |orderByClause 
 ;
@@ -66,7 +69,7 @@ join_type:KW_LEFT|KW_INNER|KW_RIGHT|KW_FULL
 whereClause : KW_WHERE KW_ROWNUM operator INT    #top
 |KW_WHERE booleanExpression                      #where
 ;
-groupByClause : KW_GROUP KW_BY fieldName 
+groupByClause : KW_GROUP KW_BY fieldName (','fieldName)*
 ;
 orderByClause : KW_ORDER KW_BY orderList
 ;
@@ -97,7 +100,11 @@ booleanExpression:booleanExpression KW_AND booleanExpression
                 |fieldExpression  KW_IS (KW_NOT)? KW_NULL
                 |fieldExpression KW_IN selectStatement
 ;
-fieldExpression:caseExpression
+fieldExpression
+locals[
+boolean isContainAggMethod
+]
+:caseExpression
                 |methodExpression
                 |LPAREN fieldExpression RPAREN
                 |fieldExpression (STAR|DIV|MOD)fieldExpression
@@ -106,8 +113,8 @@ fieldExpression:caseExpression
                 |fieldName
 		|allFields
 ;
-methodExpression:IDENTIFIER (LPAREN fieldExpression(','fieldExpression)*RPAREN
-                              |LPAREN RPAREN)
+methodExpression:aggmethod LPAREN fieldExpression RPAREN
+                |IDENTIFIER (LPAREN fieldExpression(','fieldExpression)*RPAREN|LPAREN RPAREN)
 ;
 caseExpression: KW_CASE (KW_WHEN booleanExpression KW_THEN fieldExpression)+ (elseClause)? KW_END
                 | KW_CASE fieldExpression (KW_WHEN fieldExpression KW_THEN fieldExpression)+ (elseClause)? KW_END
@@ -118,9 +125,15 @@ fieldName : IDENTIFIER ('.' IDENTIFIER)*                 #identifierField
 		|DOUBLE                                  #doubleField
                 |STRING                                  #StringField
 ;
-
+aggmethod:KW_COUNT|KW_AVG|KW_MAX|KW_MIN|KW_SUM;
 STAR : '*';
 //KEYWORDS
+//聚合函数
+KW_MAX:('m'|'M')('a'|'A')('x'|'X');
+KW_COUNT:('c'|'C')('o'|'O')('u'|'U')('n'|'N')('t'|'T');
+KW_SUM:('s'|'S')('u'|'U')('m'|'M');
+KW_AVG:('a'|'A')('v'|'V')('g'|'G');
+KW_MIN:('m'|'M')('i'|'I')('n'|'N');
 KW_BY:('b'|'B')('y'|'Y');
 KW_FULL:('f'|'F')('u'|'U')('l'|'L')('l'|'L');
 KW_DESC:('d'|'D')('e'|'E')('s'|'S')('c'|'C');

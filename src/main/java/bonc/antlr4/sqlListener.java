@@ -406,6 +406,16 @@ public interface sqlListener extends ParseTreeListener {
 	 */
 	void exitStringField(sqlParser.StringFieldContext ctx);
 	/**
+	 * Enter a parse tree produced by {@link sqlParser#aggmethod}.
+	 * @param ctx the parse tree
+	 */
+	void enterAggmethod(sqlParser.AggmethodContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link sqlParser#aggmethod}.
+	 * @param ctx the parse tree
+	 */
+	void exitAggmethod(sqlParser.AggmethodContext ctx);
+	/**
 	 * Enter a parse tree produced by {@link sqlParser#operator}.
 	 * @param ctx the parse tree
 	 */

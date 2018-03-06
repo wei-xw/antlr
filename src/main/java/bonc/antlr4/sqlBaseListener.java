@@ -466,6 +466,18 @@ public class sqlBaseListener implements sqlListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
+	@Override public void enterAggmethod(sqlParser.AggmethodContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitAggmethod(sqlParser.AggmethodContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
 	@Override public void enterOperator(sqlParser.OperatorContext ctx) { }
 	/**
 	 * {@inheritDoc}
