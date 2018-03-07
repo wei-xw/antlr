@@ -48,6 +48,8 @@ public class MappingListener extends sqlBaseListener {
 		nodeName.put("m3105", new Count());
 		nodeName.put("m3107", new Count());
 		nodeName.put("m3122", new Count());
+		nodeName.put("m3126", new Count());
+		nodeName.put("m3111", new Count());
 	}
 	String vertexId;
 	int x = 200;
@@ -57,7 +59,7 @@ public class MappingListener extends sqlBaseListener {
 	boolean isExpand;
 	{
 		etl.setOid("f03427ae-53f2-472c-bc44-d2344c04396a");
-		etl.setMappingName("wxwimportTMP");
+		etl.setMappingName("antlr别名");
 		etl.setExecuteType(0);
 		ETLMappingProxyResource proxyResource = new ETLMappingProxyResource();
 		proxyResource.setPort(0);

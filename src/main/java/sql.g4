@@ -28,7 +28,12 @@ public List<Column> columnList = new ArrayList<Column>()
 :unionQuery orderByClause?                     #union
 |selectQueryBlock                                             #select
 ;
-unionQuery: selectQueryBlock1 (KW_UNION KW_ALL? selectQueryBlock1)+
+unionQuery
+locals[
+String uuid;
+public List<Column> columnList = new ArrayList<Column>();
+]
+: selectQueryBlock1 (KW_UNION KW_ALL? selectQueryBlock1)+
 ;
 selectQueryBlock 
 locals [
