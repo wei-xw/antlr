@@ -556,15 +556,40 @@ public class MappingListener extends sqlBaseListener {
 			sqlParser.SelectjoinContext selectjoin = (sqlParser.SelectjoinContext) ctx.fromClause().tableSource();
 			List<sqlParser.TableSourceContext> tablesList = selectjoin.tableSource();
 			List<sqlParser.Join_typeContext> join_typeList = selectjoin.join_type();
+			ETLWidgetInstView e = new ETLWidgetInstView();
 			if (join_typeList.size() == 1) {
 				System.out.println("连接节点");
+				widgetInsts.add(e);
+				e.setWidgetType("m3111");
+				int idex = ((Count) nodeName.get("m3111")).getI();
+				e.setInstancName("连接转换" + idex);
+				ETLWidgetView widget3111 = new ETLWidgetView();
+				e.setWidget(widget3111);
+				widget3111.setOid(e.getOid());
+				widget3111.setWidgetName("连接转换" + idex);
+				((Count) nodeName.get("m3111")).setI(++idex);
+				widget3111.setWidgetType("m3111");
+				widget3111.setIsReusable(0);
 			} else {
 				System.out.println("多连接节点");
+				widgetInsts.add(e);
+				e.setWidgetType("m3126");
+				int idex = ((Count) nodeName.get("m3126")).getI();
+				e.setInstancName("多表连接转换" + idex);
+				ETLWidgetView widget3126 = new ETLWidgetView();
+				e.setWidget(widget3126);
+				widget3126.setOid(e.getOid());
+				widget3126.setWidgetName("多表连接转换" + idex);
+				((Count) nodeName.get("m3126")).setI(++idex);
+				widget3126.setWidgetType("m3126");
+				widget3126.setIsReusable(0);
 			}
+			Map aliasUuid=new HashMap<String,String>();
 			System.out.println("来源uuid：");
 			for (sqlParser.TableSourceContext table : tablesList) {
 				System.out.print(table.alias + "    ||    ");
 				System.out.println(table.uuid);
+				aliasUuid.put(table.alias,table.uuid);
 			}
 			visitColumnList(columnSetUsed);
 			System.out.println("当前节点uuid： " + ctx.uuid);
@@ -1186,7 +1211,7 @@ public class MappingListener extends sqlBaseListener {
 	}
 
 	/**
-	 * {@inheritDoc}I
+	 * {@inheritDoc}
 	 *
 	 * <p>
 	 * The default implementation does nothing.
@@ -1194,9 +1219,13 @@ public class MappingListener extends sqlBaseListener {
 	 */
 	@Override
 	public void exitSubSelectQuery(sqlParser.SubSelectQueryContext ctx) {
-		ctx.columnList = ctx.selectStatement().columnList;
 		ctx.uuid = ctx.selectStatement().uuid;
 		ctx.alias = ctx.alias().getText();
+		for(Column col :ctx.selectStatement().columnList) {
+				col.setTableOrAlias(ctx.alias);
+		}
+		ctx.columnList = ctx.selectStatement().columnList;
+		
 	}
 
 	/**
@@ -1595,6 +1624,7 @@ public class MappingListener extends sqlBaseListener {
 		for (String tmp : colList) {
 			Column col = new Column();
 			col.setColumnName(tmp);
+			col.setTableOrAlias(ctx.tableName().IDENTIFIER(ctx.tableName().IDENTIFIER().size() - 1).getText());
 			ctx.columnList.add(col);
 		}
 		ETLWidgetInstView e3101 = new ETLWidgetInstView(), e3103 = new ETLWidgetInstView();
