@@ -49,14 +49,14 @@ public class MappingListener extends sqlBaseListener {
 
 	}
 	String vertexId;
-	int x = 100;
-	int y = 100;
+	int x = 200;
+	int y = 200;
 	int length = 150;
 	int width = 200;
 	boolean isExpand;
 	{
 		etl.setOid("f03427ae-53f2-472c-bc44-d2344c04396a");
-		etl.setMappingName("wxwimport");
+		etl.setMappingName("wxwimportTMP");
 		etl.setExecuteType(0);
 		ETLMappingProxyResource proxyResource = new ETLMappingProxyResource();
 		proxyResource.setPort(0);
@@ -171,7 +171,7 @@ public class MappingListener extends sqlBaseListener {
 		}
 		visitColumnList(ctx.columnList);
 		e.setWidgetInstId(ctx.uuid);
-		VertexAddrs.add(new VertexAddr(ctx.uuid, x += 50, y += 50, length, width, false));
+		VertexAddrs.add(new VertexAddr(ctx.uuid, x += 100, y, length, width, false));
 		e.setWidgetType("m3102");
 		e.setInstancName(ctx.insertClause().tableName()
 				.IDENTIFIER(ctx.insertClause().tableName().IDENTIFIER().size() - 1).getText() + "_1");
@@ -523,7 +523,7 @@ public class MappingListener extends sqlBaseListener {
 					visitColumnList(columnSetUsed);
 					ctx.uuid = UUID.randomUUID().toString();
 					System.out.println("当前节点uuid： " + ctx.uuid);
-					VertexAddrs.add(new VertexAddr(ctx.uuid, x += 50, y += 50, length, width, false));
+					VertexAddrs.add(new VertexAddr(ctx.uuid, x += 100, y, length, width, false));
 					e.setOid(ctx.uuid);
 					e.setWidgetInstId(ctx.uuid);
 					e.getWidget().setOid(ctx.uuid);
@@ -618,7 +618,7 @@ public class MappingListener extends sqlBaseListener {
 			}
 			ctx.columnList = columnOutList;
 			System.out.println("当前节点uuid： " + ctx.uuid);
-			VertexAddrs.add(new VertexAddr(ctx.uuid, x += 50, y += 50, length, width, false));
+			VertexAddrs.add(new VertexAddr(ctx.uuid, x += 100, y, length, width, false));
 			e.setOid(ctx.uuid);
 			e.setWidgetInstId(ctx.uuid);
 			e.getWidget().setOid(ctx.uuid);
@@ -707,7 +707,7 @@ public class MappingListener extends sqlBaseListener {
 				}
 			}
 			ctx.columnList = columnOutList;
-			VertexAddrs.add(new VertexAddr(ctx.uuid, x += 50, y += 50, length, width, false));
+			VertexAddrs.add(new VertexAddr(ctx.uuid, x += 100, y, length, width, false));
 			e.setOid(ctx.uuid);
 			e.setWidgetInstId(ctx.uuid);
 			e.getWidget().setOid(ctx.uuid);
@@ -1202,11 +1202,14 @@ public class MappingListener extends sqlBaseListener {
 			"DEVICE_TYPE", "MOBILE_COST", "DEVICE_NAME", "DEVICE_BRAND", "IMEI", "LIST_BANK", "LIST_FEE", "LIST_CODE",
 			"CREDIT_ORG", "CREDIT_TYPE", "CREDIT_CARD_NUM", "AGREEMENT", "PRODUCT_ID", "PACKAGE_ID", "STAFF_ID",
 			"DEPART_ID", "START_DATE", "END_DATE", "REMARK", "ITEM_ID", "MONTH_ID", "DAY_ID");
-
+	List<String> colListWXW_ANTLR_A=Arrays.asList("ID","NAME","ADDRESS","TEL","E_MAIL");
+	List<String> colListWXW_ANTLR_B=Arrays.asList("B_ID","B_NAME","B_ADDRESS","B_TEL","B_E_MAIL");
 	Map tableCols = new HashMap<String, List<String>>();
 	{
 		tableCols.put("WXW_ANTLR_DIRECT_TEST", colListWXW_ANTLR_DIRECT_TEST);
 		tableCols.put("WXW_ANTLR_TEST", colListWXW_ANTLR_TEST);
+		tableCols.put("WXW_ANTLR_A",colListWXW_ANTLR_A);
+		tableCols.put("WXW_ANTLR_B",colListWXW_ANTLR_B);
 	}
 
 	/**
@@ -1232,10 +1235,10 @@ public class MappingListener extends sqlBaseListener {
 
 		ctx.uuid = UUID.randomUUID().toString();
 		e3101.setWidgetInstId(ctx.uuid);
-		VertexAddrs.add(new VertexAddr(ctx.uuid, x += 50, y += 50, length, width, false));
+		VertexAddrs.add(new VertexAddr(ctx.uuid, x += 100, y, length, width, false));
 		ctx.uuid = UUID.randomUUID().toString();
 		e3103.setWidgetInstId(ctx.uuid);
-		VertexAddrs.add(new VertexAddr(ctx.uuid, x += 50, y += 50, length, width, false));
+		VertexAddrs.add(new VertexAddr(ctx.uuid, x += 100, y, length, width, false));
 		ctx.tableName = ctx.tableName().getText();
 		if (ctx.alias() != null)
 			ctx.alias = ctx.alias().getText();

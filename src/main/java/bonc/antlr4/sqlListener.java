@@ -98,6 +98,26 @@ public interface sqlListener extends ParseTreeListener {
 	 */
 	void exitSelectAction(sqlParser.SelectActionContext ctx);
 	/**
+	 * Enter a parse tree produced by {@link sqlParser#selectQueryBlock1}.
+	 * @param ctx the parse tree
+	 */
+	void enterSelectQueryBlock1(sqlParser.SelectQueryBlock1Context ctx);
+	/**
+	 * Exit a parse tree produced by {@link sqlParser#selectQueryBlock1}.
+	 * @param ctx the parse tree
+	 */
+	void exitSelectQueryBlock1(sqlParser.SelectQueryBlock1Context ctx);
+	/**
+	 * Enter a parse tree produced by {@link sqlParser#selectAction1}.
+	 * @param ctx the parse tree
+	 */
+	void enterSelectAction1(sqlParser.SelectAction1Context ctx);
+	/**
+	 * Exit a parse tree produced by {@link sqlParser#selectAction1}.
+	 * @param ctx the parse tree
+	 */
+	void exitSelectAction1(sqlParser.SelectAction1Context ctx);
+	/**
 	 * Enter a parse tree produced by {@link sqlParser#insertClause}.
 	 * @param ctx the parse tree
 	 */

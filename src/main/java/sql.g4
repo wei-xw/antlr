@@ -28,7 +28,7 @@ public List<Column> columnList = new ArrayList<Column>()
 :unionQuery orderByClause?                     #union
 |selectQueryBlock                                             #select
 ;
-unionQuery: (selectClause fromClause (whereClause|groupByClause)?) (KW_UNION KW_ALL? (selectClause fromClause (whereClause|groupByClause)?))+
+unionQuery: selectQueryBlock1 (KW_UNION KW_ALL? selectQueryBlock1)+
 ;
 selectQueryBlock 
 locals [
@@ -43,6 +43,19 @@ public void dd(){
 selectAction : whereClause
 |groupByClause
 |orderByClause 
+;
+selectQueryBlock1
+locals [
+String uuid;
+public List<Column> columnList = new ArrayList<Column>();
+public Set<Column> columnSet = new HashSet<Column>();
+public void dd(){
+}
+]
+: selectClause fromClause (selectAction1)*
+;
+selectAction1 : whereClause
+|groupByClause
 ;
 insertClause : KW_INSERT KW_INTO tableName 
 |KW_INSERT KW_INTO tableName columnlist
