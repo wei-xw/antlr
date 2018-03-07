@@ -357,6 +357,8 @@ public class sqlParser extends Parser {
 	}
 
 	public static class UnionQueryContext extends ParserRuleContext {
+		public String uuid;
+		public List<Column> columnList = new ArrayList<Column>();;
 		public List<SelectQueryBlock1Context> selectQueryBlock1() {
 			return getRuleContexts(SelectQueryBlock1Context.class);
 		}

@@ -22,6 +22,7 @@ import com.bonc.dataplatform.repository.mapping.vo.ETLMappingView;
 import com.bonc.dataplatform.repository.mapping.vo.ETLWidgetDepsView;
 import com.bonc.dataplatform.repository.mapping.vo.ETLWidgetFieldView;
 import com.bonc.dataplatform.repository.mapping.vo.ETLWidgetInstView;
+import com.bonc.dataplatform.repository.mapping.vo.ETLWidgetUnionGroupView;
 import com.bonc.dataplatform.repository.mapping.vo.ETLWidgetView;
 import com.bonc.dataplatform.repository.workflow.vo.ETLCodeAttrValView;
 import com.thoughtworks.xstream.XStream;
@@ -46,7 +47,7 @@ public class MappingListener extends sqlBaseListener {
 		nodeName.put("m3101", new Count());
 		nodeName.put("m3105", new Count());
 		nodeName.put("m3107", new Count());
-
+		nodeName.put("m3122", new Count());
 	}
 	String vertexId;
 	int x = 200;
@@ -284,6 +285,16 @@ public class MappingListener extends sqlBaseListener {
 	 */
 	@Override
 	public void exitUnion(sqlParser.UnionContext ctx) {
+		ctx.columnList = ctx.unionQuery().columnList;
+		ctx.uuid = ctx.unionQuery().uuid;
+		if (ctx.orderByClause() != null) {
+			visitOrderBy(ctx.orderByClause());
+			System.out.println("上一节点uuid:" + ctx.uuid);
+			visitColumnList(ctx.columnList);
+			ctx.uuid = UUID.randomUUID().toString();
+			System.out.println("当前节点uuid:" + ctx.uuid);
+			visitColumnList(ctx.columnList);
+		}
 	}
 
 	/**
@@ -343,7 +354,75 @@ public class MappingListener extends sqlBaseListener {
 	 */
 	@Override
 	public void exitUnionQuery(sqlParser.UnionQueryContext ctx) {
+		List<Column> columnListMore = new ArrayList<Column>();
+		List<sqlParser.SelectQueryBlock1Context> list = ctx.selectQueryBlock1();
+		System.out.println("联合节点");
+		ETLWidgetInstView e = new ETLWidgetInstView();
+		widgetInsts.add(e);
+		e.setWidgetType("m3122");
+		int idex = ((Count) nodeName.get("m3122")).getI();
+		e.setInstancName("联合转换" + idex);
+		ETLWidgetView widget3122 = new ETLWidgetView();
+		e.setWidget(widget3122);
+		widget3122.setOid(e.getOid());
+		widget3122.setWidgetName("联合转换" + idex);
+		((Count) nodeName.get("m3122")).setI(++idex);
+		widget3122.setWidgetType("m3122");
+		widget3122.setIsReusable(0);
+		for (int i = 0; i < list.size(); i++) {
+			ctx.columnList = list.get(i).columnList;
+			ctx.uuid = list.get(i).uuid;
+			System.out.println("第" + (i + 1) + "个前节点uuid:" + ctx.uuid);
+			String fromFieldUid = ctx.uuid;
+			visitColumnList(ctx.columnList);
+		}
+		ctx.uuid = UUID.randomUUID().toString();
+		System.out.println("当前节点uuid:" + ctx.uuid);
+		VertexAddrs.add(new VertexAddr(ctx.uuid, x += 100, y, length, width, false));
+		e.setOid(ctx.uuid);
+		e.setWidgetInstId(ctx.uuid);
+		widget3122.setOid(ctx.uuid);
+		List<ETLWidgetFieldView> widgetFields = new ArrayList<ETLWidgetFieldView>();
+		widget3122.setWidgetFields(widgetFields);
+		List<ETLWidgetUnionGroupView> groups = new ArrayList<ETLWidgetUnionGroupView>();
+		widget3122.setGroups(groups);
 
+		// 当前字段列是第一个来源表的列。
+		columnListMore = list.get(0).columnList;
+		ETLWidgetFieldView eTLWidgetFieldView = null;
+		eTLWidgetFieldView = new ETLWidgetFieldView("输出", "输出", 999, 0, 0, 0, 0, 0, null, null, null, "输出", null, null,
+				999);
+		eTLWidgetFieldView.setSortType(0);
+		widgetFields.add(eTLWidgetFieldView);
+		groups.add(new ETLWidgetUnionGroupView("输出", "输出"));
+		for (Column col : columnListMore) {
+			eTLWidgetFieldView = new ETLWidgetFieldView(col.getColumnName(), col.getColumnName(), 255, 0, 95442, 2, 0,
+					0, null, null, null, "输出", null, null, 1);
+			eTLWidgetFieldView.setSortType(0);
+			widgetFields.add(eTLWidgetFieldView);
+		}
+		for (int j = 0; j < list.size(); j++) {
+			eTLWidgetFieldView = new ETLWidgetFieldView("输入" + j + 1, "输入" + j + 1, 999, 0, 0, 1, 0, 0, null, null,
+					"输入" + j + 1, null, null, null, 999);
+			eTLWidgetFieldView.setSortType(0);
+			widgetFields.add(eTLWidgetFieldView);
+			groups.add(new ETLWidgetUnionGroupView("输入" + j + 1, "新增加的分组"));
+			String fromUuid = list.get(j).uuid;
+			List<Column> fromColList = list.get(j).columnList;
+			for (int i = 0; i < columnListMore.size(); i++) {
+				eTLWidgetFieldView = new ETLWidgetFieldView(columnListMore.get(i).getColumnName() + "#" + j + 1,
+						columnListMore.get(i).getColumnName() + "#" + j + 1, 255, 0, 95442, 1, 0, 0, null, null,
+						"输入" + j + 1, null, null, null, 1);
+				eTLWidgetFieldView.setSortType(0);
+				widgetFields.add(eTLWidgetFieldView);
+				ETLWidgetDepsView eTLWidgetDepsView = new ETLWidgetDepsView(fromUuid,
+						fromColList.get(i).getColumnName(), ctx.uuid,
+						columnListMore.get(i).getColumnName() + "#" + j + 1);
+				widgetDeps.add(eTLWidgetDepsView);
+			}
+		}
+		ctx.columnList = columnListMore;
+		visitColumnList(columnListMore);
 	}
 
 	/**
@@ -496,7 +575,7 @@ public class MappingListener extends sqlBaseListener {
 			}
 			System.out.println();
 		}
-       Set<Column> groupSet=null;
+		Set<Column> groupSet = null;
 		if (ctx.selectAction() != null) {
 			for (sqlParser.SelectActionContext selectAction : ctx.selectAction()) {
 				for (Column col : visitWhere(selectAction.whereClause())) {
@@ -506,12 +585,11 @@ public class MappingListener extends sqlBaseListener {
 				for (Column col : visitOrderBy(selectAction.orderByClause())) {
 					if (!columnSetUsed.contains(col))
 						columnSetUsed.add(col);
-				} 
-				isGroupBy = (groupSet=visitGroupBy(selectAction.groupByClause()))!=null;
+				}
+				isGroupBy = (groupSet = visitGroupBy(selectAction.groupByClause())) != null;
 			}
 			// 简单实现的，所以用了两个for循环，一个存字段，一个打印，之后是往xml对象里存，一个for就可以办到。
 			for (sqlParser.SelectActionContext selectAction : ctx.selectAction()) {
-				// groupby还不知道该怎么做
 				ETLWidgetInstView e = new ETLWidgetInstView();
 				widgetInsts.add(e);
 				// printGroupBy(selectAction.groupByClause());
@@ -532,8 +610,8 @@ public class MappingListener extends sqlBaseListener {
 					e.getWidget().setWidgetFields(widgetFields);
 					for (Column col : columnSetUsed) {
 						ETLWidgetFieldView eTLWidgetFieldView = new ETLWidgetFieldView(col.getColumnName(),
-								col.getColumnName(), 255, 0, 95442, 3, 0, 0, null, null, null, null, null, col.getColumnName(),
-								1);
+								col.getColumnName(), 255, 0, 95442, 3, 0, 0, null, null, null, null, null,
+								col.getColumnName(), 1);
 						eTLWidgetFieldView.setSortType(0);
 						widgetFields.add(eTLWidgetFieldView);
 						ETLWidgetDepsView eTLWidgetDepsView = new ETLWidgetDepsView(fromFieldUid, col.getColumnName(),
@@ -672,9 +750,297 @@ public class MappingListener extends sqlBaseListener {
 			List<ETLWidgetFieldView> widgetFields = new ArrayList<ETLWidgetFieldView>();
 			e.getWidget().setWidgetFields(widgetFields);
 			ctx.uuid = UUID.randomUUID().toString();
-			
+
 			for (Column col : columnSetUsed) {
-				int expType=groupSet.contains(col)?46:1;
+				int expType = groupSet.contains(col) ? 46 : 1;
+				ETLWidgetFieldView eTLWidgetFieldView = new ETLWidgetFieldView(col.getColumnName(), col.getColumnName(),
+						255, 0, 95442, 3, 0, 0, null, null, null, null, null, col.getExp(), expType);
+				eTLWidgetFieldView.setSortType(0);
+				widgetFields.add(eTLWidgetFieldView);
+				ETLWidgetDepsView eTLWidgetDepsView = new ETLWidgetDepsView(fromFieldUid, col.getColumnName(), ctx.uuid,
+						col.getColumnName());
+				widgetDeps.add(eTLWidgetDepsView);
+				System.out.println(col.getColumnName() + " 表达式 " + col.getExp());
+				colSet.add(col.getColumnName());
+			}
+			String field = "NewField", tmp = "NewField1";
+			int i = 1;
+			for (Column col : columnRealList) {
+				if (!col.isContained()) {
+					if (col.getAlias() != "") {
+						tmp = col.getAlias();
+					} else
+						while (colSet.contains(tmp)) {
+							tmp = field + i;
+							i++;
+						}
+					colSet.add(tmp);
+					col.setColumnName(tmp);
+					columnOutList.add(col);
+					ETLWidgetFieldView eTLWidgetFieldView = new ETLWidgetFieldView(col.getColumnName(),
+							col.getColumnName(), 255, 0, 95442, 3, 0, 0, null, null, null, null, null, col.getExp(), 1);
+					eTLWidgetFieldView.setSortType(0);
+					widgetFields.add(eTLWidgetFieldView);
+					System.out.println(tmp + " 表达式 " + col.getExp());
+				}
+			}
+			ctx.columnList = columnOutList;
+			VertexAddrs.add(new VertexAddr(ctx.uuid, x += 100, y, length, width, false));
+			e.setOid(ctx.uuid);
+			e.setWidgetInstId(ctx.uuid);
+			e.getWidget().setOid(ctx.uuid);
+			System.out.println("当前节点uuid： " + ctx.uuid);
+			System.out.println();
+		}
+	}
+
+	public void exitSelectQueryBlock1(sqlParser.SelectQueryBlock1Context ctx) {
+		ctx.uuid = ctx.fromClause().tableSource().uuid;
+		// 填节点的字段
+		// 填当前节点的
+		List<Column> columnRealList = new ArrayList<Column>();
+		List<Column> columnOutList = new ArrayList<Column>();
+		Set<Column> columnSetUsed = new HashSet<Column>();// 当前select块需要的from字句的字段，作为表达式节点的端口（表达式节点的端口不允许重复），因此不支持SELECT
+															// USER_ID PACKAGE_ID,PACKAGE_ID PACKAGE_ID FROM
+															// WXWTEST.TEMP
+		boolean isExpression = false, isGroupBy = false;
+		if (ctx.fromClause().tableSource() != null) {
+			for (sqlParser.ColumnContext columnContext : ctx.selectClause().columnlist().column()) {
+				Column col1 = new Column(), col2 = new Column();
+				if (columnContext.fieldExpression().allFields() == null) {
+					if (columnContext.fieldExpression().fieldName() == null) {
+						columnSetUsed.addAll(visitFieldExpression(columnContext.fieldExpression()));
+						isExpression = true;
+						col2.setExp(columnContext.fieldExpression().getText());
+						if (columnContext.alias() != null) { // 有别名的设置，没有的这里也没有什么好办法,暂时和columnName一样。
+							col2.setAlias(columnContext.alias().getText());
+						} else {
+							col2.setAlias("");
+						}
+					} else {
+						col1.setColumnName(columnContext.fieldExpression().getText());
+						columnSetUsed.add(col1);
+						col2.setExp(columnContext.fieldExpression().fieldName().getText());
+						col2.setColumnName(col2.getExp());
+						if (columnContext.alias() != null) { // 有别名的设置，没有的这里也没有什么好办法,暂时和columnName一样。
+							col2.setAlias(columnContext.alias().getText());
+							col2.setAggregate(columnContext.fieldExpression().isContainAggMethod);
+							if (!columnContext.alias().getText().equals(col2.getExp()))
+								isExpression = true;// columnContext的表达式和别名不相同，例如select b as a ...，则需要表达式节点进行取别名
+						} else {
+							col2.setAlias(col2.getExp());
+						}
+					}
+					columnRealList.add(col2);
+				} else {
+					// 两个list大小，以及加工映射，后面？的字段表达式为空，默认填字段
+					// 此时columnRealList是select后面的column把*替换后的，col可以由表达式函数、别名构成
+					columnRealList.addAll(ctx.fromClause().tableSource().columnList);
+					// columnListMore *替换后的，表达式函数中包含的字段set
+					columnSetUsed.addAll(ctx.fromClause().tableSource().columnList);// 这里可以优化下，既然都*了，那么也不需要做这个循环中的其他事
+				}
+			}
+		}
+		ctx.columnList = columnRealList;// 对于list 注意=和addAll的区别
+		if (ctx.fromClause().tableSource() instanceof sqlParser.SelectjoinContext) {
+			ctx.uuid = UUID.randomUUID().toString();
+			sqlParser.SelectjoinContext selectjoin = (sqlParser.SelectjoinContext) ctx.fromClause().tableSource();
+			List<sqlParser.TableSourceContext> tablesList = selectjoin.tableSource();
+			List<sqlParser.Join_typeContext> join_typeList = selectjoin.join_type();
+			if (join_typeList.size() == 1) {
+				System.out.println("连接节点");
+			} else {
+				System.out.println("多连接节点");
+			}
+			System.out.println("来源uuid：");
+			for (sqlParser.TableSourceContext table : tablesList) {
+				System.out.print(table.alias + "    ||    ");
+				System.out.println(table.uuid);
+			}
+			visitColumnList(columnSetUsed);
+			System.out.println("当前节点uuid： " + ctx.uuid);
+			for (int i = 0; i < join_typeList.size(); i++) {
+				System.out.println("JOIN类型： " + join_typeList.get(i).getText() + " JOIN");
+				System.out.print("表：");
+				System.out.print(selectjoin.tableSource(i).alias + ",");
+				System.out.println(selectjoin.tableSource(i + 1).alias);
+				System.out.println("JOIN条件：" + selectjoin.booleanExpression(i).getText());
+			}
+			System.out.println();
+		}
+		Set<Column> groupSet = null;
+		if (ctx.selectAction1() != null) {
+			for (sqlParser.SelectAction1Context selectAction : ctx.selectAction1()) {
+				for (Column col : visitWhere(selectAction.whereClause())) {
+					if (!columnSetUsed.contains(col))
+						columnSetUsed.add(col);
+				}
+				isGroupBy = (groupSet = visitGroupBy(selectAction.groupByClause())) != null;
+			}
+			// 简单实现的，所以用了两个for循环，一个存字段，一个打印，之后是往xml对象里存，一个for就可以办到。
+			for (sqlParser.SelectAction1Context selectAction : ctx.selectAction1()) {
+				ETLWidgetInstView e = new ETLWidgetInstView();
+				widgetInsts.add(e);
+				// printGroupBy(selectAction.groupByClause());
+				printWhere(selectAction.whereClause(), e);
+				// printOrderBy(selectAction.orderByClause(),e);
+				if (selectAction.groupByClause() == null) {
+					System.out.println("上一个节点uuid： " + ctx.uuid);
+					String fromFieldUid = ctx.uuid;
+					visitColumnList(columnSetUsed);
+					ctx.uuid = UUID.randomUUID().toString();
+					System.out.println("当前节点uuid： " + ctx.uuid);
+					VertexAddrs.add(new VertexAddr(ctx.uuid, x += 100, y, length, width, false));
+					e.setOid(ctx.uuid);
+					e.setWidgetInstId(ctx.uuid);
+					e.getWidget().setOid(ctx.uuid);
+					visitColumnList(columnSetUsed);
+					List<ETLWidgetFieldView> widgetFields = new ArrayList<ETLWidgetFieldView>();
+					e.getWidget().setWidgetFields(widgetFields);
+					for (Column col : columnSetUsed) {
+						ETLWidgetFieldView eTLWidgetFieldView = new ETLWidgetFieldView(col.getColumnName(),
+								col.getColumnName(), 255, 0, 95442, 3, 0, 0, null, null, null, null, null,
+								col.getColumnName(), 1);
+						eTLWidgetFieldView.setSortType(0);
+						widgetFields.add(eTLWidgetFieldView);
+						ETLWidgetDepsView eTLWidgetDepsView = new ETLWidgetDepsView(fromFieldUid, col.getColumnName(),
+								ctx.uuid, col.getColumnName());
+						widgetDeps.add(eTLWidgetDepsView);
+					}
+					e.getWidget().setIsReusable(0);
+					System.out.println();
+				}
+
+			}
+		}
+		if (isExpression && !isGroupBy) {
+			System.out.println("表达式节点：");
+			System.out.println("上一个节点uuid： " + ctx.uuid);
+			ETLWidgetInstView e = new ETLWidgetInstView();
+			widgetInsts.add(e);
+			String fromFieldUid = ctx.uuid;
+			System.out.println("上一个节点的字段");
+			for (Column col : columnSetUsed) {
+				col.setExp(col.getColumnName());
+				System.out.println(col.getColumnName());
+			}
+			for (Column col : columnRealList) {
+				if (col.getAlias() != "") {
+					for (Column col1 : columnSetUsed) {
+						if (col1.getColumnName().equals(col.getAlias())) {
+							col1.setExp(col.getExp());
+							col.setContained(true);
+							columnOutList.add(col1);
+						}
+					}
+				}
+			}
+			Set<String> colSet = new HashSet<String>();
+			e.setWidgetType("m3105");
+			int idex = ((Count) nodeName.get("m3105")).getI();
+			e.setInstancName("表达式转换" + idex);
+			ETLWidgetView widget3105 = new ETLWidgetView();
+			e.setWidget(widget3105);
+			widget3105.setOid(e.getOid());
+			widget3105.setWidgetName("表达式转换" + idex);
+			((Count) nodeName.get("m3105")).setI(++idex);
+			widget3105.setWidgetType("m3105");
+			widget3105.setIsReusable(0);
+			System.out.println("当前节点的字段");
+			List<ETLWidgetFieldView> widgetFields = new ArrayList<ETLWidgetFieldView>();
+			e.getWidget().setWidgetFields(widgetFields);
+			ctx.uuid = UUID.randomUUID().toString();
+			for (Column col : columnSetUsed) {
+				ETLWidgetFieldView eTLWidgetFieldView = new ETLWidgetFieldView(col.getColumnName(), col.getColumnName(),
+						255, 0, 95442, 3, 0, 0, null, null, null, null, null, col.getExp(), 1);
+				eTLWidgetFieldView.setSortType(0);
+				widgetFields.add(eTLWidgetFieldView);
+				ETLWidgetDepsView eTLWidgetDepsView = new ETLWidgetDepsView(fromFieldUid, col.getColumnName(), ctx.uuid,
+						col.getColumnName());
+				widgetDeps.add(eTLWidgetDepsView);
+				System.out.println(col.getColumnName() + " 表达式 " + col.getExp());
+				colSet.add(col.getColumnName());
+			}
+			String field = "NewField", tmp = "NewField1";
+			int i = 1;
+			for (Column col : columnRealList) {
+				if (!col.isContained()) {
+					if (col.getAlias() != "") {
+						tmp = col.getAlias();
+					} else
+						while (colSet.contains(tmp)) {
+							tmp = field + i;
+							i++;
+						}
+					colSet.add(tmp);
+					col.setColumnName(tmp);
+					columnOutList.add(col);
+					ETLWidgetFieldView eTLWidgetFieldView = new ETLWidgetFieldView(col.getColumnName(),
+							col.getColumnName(), 255, 0, 95442, 3, 0, 0, null, null, null, null, null, col.getExp(), 1);
+					eTLWidgetFieldView.setSortType(0);
+					widgetFields.add(eTLWidgetFieldView);
+					System.out.println(tmp + " 表达式 " + col.getExp());
+				}
+			}
+			ctx.columnList = columnOutList;
+			System.out.println("当前节点uuid： " + ctx.uuid);
+			VertexAddrs.add(new VertexAddr(ctx.uuid, x += 100, y, length, width, false));
+			e.setOid(ctx.uuid);
+			e.setWidgetInstId(ctx.uuid);
+			e.getWidget().setOid(ctx.uuid);
+			System.out.println();
+		}
+		if (isExpression && isGroupBy) {
+			System.out.println("汇总节点：");
+			System.out.println("上一个节点uuid： " + ctx.uuid);
+			ETLWidgetInstView e = new ETLWidgetInstView();
+			widgetInsts.add(e);
+			String fromFieldUid = ctx.uuid;
+			System.out.println("上一个节点的字段");
+			for (Column col : columnSetUsed) {
+				col.setExp(col.getColumnName());
+				System.out.println(col.getColumnName());
+			}
+			for (Column col : columnRealList) {
+				if (col.getAlias() != "") {
+					for (Column col1 : columnSetUsed) {
+						if (col1.getColumnName().equals(col.getAlias())) {
+							col1.setExp(col.getExp());
+							col.setContained(true);
+							columnOutList.add(col1);
+						}
+					}
+				}
+			}
+			Set<String> colSet = new HashSet<String>();
+			e.setWidgetType("m3107");
+			int idex = ((Count) nodeName.get("m3107")).getI();
+			e.setInstancName("汇总转换" + idex);
+			ETLWidgetView widget3107 = new ETLWidgetView();
+			e.setWidget(widget3107);
+			widget3107.setOid(e.getOid());
+			widget3107.setWidgetName("汇总转换" + idex);
+			((Count) nodeName.get("m3107")).setI(++idex);
+			widget3107.setWidgetType("m3107");
+			List<ETLCodeWidgetAttrView> widgetAttrs = new ArrayList<ETLCodeWidgetAttrView>();
+			List<ETLCodeAttrValView> attrValScope = new ArrayList<ETLCodeAttrValView>();
+			attrValScope.add(new ETLCodeAttrValView("0", "否"));
+			attrValScope.add(new ETLCodeAttrValView("1", "是"));
+
+			ETLCodeWidgetAttrView eTLCodeWidgetAttrView = new ETLCodeWidgetAttrView("m3107", 228, "6", "1", "是否按所有字段分组",
+					"0", attrValScope, 0, 228, "是否按所有字段分组");
+			eTLCodeWidgetAttrView.setAttrCode("7");
+			eTLCodeWidgetAttrView.setBitflags("0");
+			widgetAttrs.add(eTLCodeWidgetAttrView);
+			widget3107.setWidgetAttrs(widgetAttrs);
+			widget3107.setIsReusable(0);
+			System.out.println("当前节点的字段");
+			List<ETLWidgetFieldView> widgetFields = new ArrayList<ETLWidgetFieldView>();
+			e.getWidget().setWidgetFields(widgetFields);
+			ctx.uuid = UUID.randomUUID().toString();
+
+			for (Column col : columnSetUsed) {
+				int expType = groupSet.contains(col) ? 46 : 1;
 				ETLWidgetFieldView eTLWidgetFieldView = new ETLWidgetFieldView(col.getColumnName(), col.getColumnName(),
 						255, 0, 95442, 3, 0, 0, null, null, null, null, null, col.getExp(), expType);
 				eTLWidgetFieldView.setSortType(0);
@@ -718,9 +1084,9 @@ public class MappingListener extends sqlBaseListener {
 
 	private Set<Column> visitGroupBy(GroupByClauseContext groupByClause) {
 		// TODO Auto-generated method stub
-		Set<Column> columnSet=new HashSet<Column>();
+		Set<Column> columnSet = new HashSet<Column>();
 		if (groupByClause != null) {
-			for(sqlParser.FieldNameContext field : groupByClause.fieldName()) {
+			for (sqlParser.FieldNameContext field : groupByClause.fieldName()) {
 				columnSet.add(new Column(field.getText()));
 			}
 			return columnSet;
@@ -1202,14 +1568,14 @@ public class MappingListener extends sqlBaseListener {
 			"DEVICE_TYPE", "MOBILE_COST", "DEVICE_NAME", "DEVICE_BRAND", "IMEI", "LIST_BANK", "LIST_FEE", "LIST_CODE",
 			"CREDIT_ORG", "CREDIT_TYPE", "CREDIT_CARD_NUM", "AGREEMENT", "PRODUCT_ID", "PACKAGE_ID", "STAFF_ID",
 			"DEPART_ID", "START_DATE", "END_DATE", "REMARK", "ITEM_ID", "MONTH_ID", "DAY_ID");
-	List<String> colListWXW_ANTLR_A=Arrays.asList("ID","NAME","ADDRESS","TEL","E_MAIL");
-	List<String> colListWXW_ANTLR_B=Arrays.asList("B_ID","B_NAME","B_ADDRESS","B_TEL","B_E_MAIL");
+	List<String> colListWXW_ANTLR_A = Arrays.asList("ID", "NAME", "ADDRESS", "TEL", "E_MAIL");
+	List<String> colListWXW_ANTLR_B = Arrays.asList("B_ID", "B_NAME", "B_ADDRESS", "B_TEL", "B_E_MAIL");
 	Map tableCols = new HashMap<String, List<String>>();
 	{
 		tableCols.put("WXW_ANTLR_DIRECT_TEST", colListWXW_ANTLR_DIRECT_TEST);
 		tableCols.put("WXW_ANTLR_TEST", colListWXW_ANTLR_TEST);
-		tableCols.put("WXW_ANTLR_A",colListWXW_ANTLR_A);
-		tableCols.put("WXW_ANTLR_B",colListWXW_ANTLR_B);
+		tableCols.put("WXW_ANTLR_A", colListWXW_ANTLR_A);
+		tableCols.put("WXW_ANTLR_B", colListWXW_ANTLR_B);
 	}
 
 	/**
@@ -1235,10 +1601,10 @@ public class MappingListener extends sqlBaseListener {
 
 		ctx.uuid = UUID.randomUUID().toString();
 		e3101.setWidgetInstId(ctx.uuid);
-		VertexAddrs.add(new VertexAddr(ctx.uuid, x += 100, y, length, width, false));
+		VertexAddrs.add(new VertexAddr(ctx.uuid, x, y, length, width, false));
 		ctx.uuid = UUID.randomUUID().toString();
 		e3103.setWidgetInstId(ctx.uuid);
-		VertexAddrs.add(new VertexAddr(ctx.uuid, x += 100, y, length, width, false));
+		VertexAddrs.add(new VertexAddr(ctx.uuid, x, y += 100, length, width, false));
 		ctx.tableName = ctx.tableName().getText();
 		if (ctx.alias() != null)
 			ctx.alias = ctx.alias().getText();
