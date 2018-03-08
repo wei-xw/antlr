@@ -18,6 +18,10 @@ public class Column {
 	public Column(String columnName) {
 		this.columnName=columnName;
 	}
+	public Column(String columnName,String tableOrAlias) {
+		this.columnName=columnName;
+		this.tableOrAlias=tableOrAlias;
+	}
 	public void setColumnName(String columnName) {
 		this.columnName = columnName;
 	}
