@@ -2,6 +2,7 @@ package bonc.antlr4.entity;
 
 public class Column {
 	private String columnName = "";
+	private String columnNamealias=""; //用于join中给两个表的相同字段加#1，例：ID=>ID#1;
 	private String type;
 	private String alias = "";
 	private String exp;
@@ -55,13 +56,13 @@ public class Column {
 
 	// column类只用columnName作为比较依据
 	public int hashCode() {
-		return columnName.hashCode();
+		return columnName.hashCode()+tableOrAlias.hashCode();
 	}
 
 	public boolean equals(Object obj) {
 		if (obj instanceof Column) {
 			Column col = (Column) obj;
-			return columnName.equals(col.columnName);
+			return columnName.equals(col.columnName)&&tableOrAlias.equals(col.tableOrAlias);
 		}
 		return super.equals(obj);
 	}
@@ -76,5 +77,11 @@ public class Column {
 	}
 	public void setTableOrAlias(String tableOrAlias) {
 		this.tableOrAlias = tableOrAlias;
+	}
+	public String getColumnNamealias() {
+		return columnNamealias;
+	}
+	public void setColumnNamealias(String columnNamealias) {
+		this.columnNamealias = columnNamealias;
 	}
 }

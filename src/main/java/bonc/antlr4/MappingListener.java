@@ -494,6 +494,7 @@ public class MappingListener extends sqlBaseListener {
 		}
 		return hs;
 	}
+	
 
 	/**
 	 * {@inheritDoc}
@@ -1462,8 +1463,19 @@ public class MappingListener extends sqlBaseListener {
 	 */
 	@Override
 	public void exitSelectjoin(sqlParser.SelectjoinContext ctx) {
+		Set<String> colSet=new HashSet<String>();
+		String tmp=null;
+		int i=0;
 		for (sqlParser.TableSourceContext table : ctx.tableSource()) {
-			ctx.columnList.addAll(table.columnList);// 获取join的表所有字段用于外层sql替换*
+			for(Column col:table.columnList) {
+				i=0;
+				tmp=col.getColumnName();
+				while(!colSet.contains(tmp)) {
+					tmp+="#"+(++i);
+				}
+				col.setColumnNamealias(tmp);
+				ctx.columnList.add(col);// 获取join的表所有字段用于外层sql替换*,并且对于两个表的字段名若相同，ID=>ID#1
+			}
 		}
 	}
 
