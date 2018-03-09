@@ -58,18 +58,29 @@ public class Column {
 		this.isContained = isContained;
 	}
 
-	// column类只用columnName作为比较依据
+//	public int hashCode() {
+//		return columnName.hashCode()+tableOrAlias.hashCode();
+//	}
+//
+//	public boolean equals(Object obj) {
+//		if (obj instanceof Column) {
+//			Column col = (Column) obj;
+//			return columnName.equals(col.columnName)&&tableOrAlias.equals(col.tableOrAlias);
+//		}
+//		return super.equals(obj);
+//	}
 	public int hashCode() {
-		return columnName.hashCode()+tableOrAlias.hashCode();
+		return columnName.hashCode();
 	}
 
 	public boolean equals(Object obj) {
 		if (obj instanceof Column) {
 			Column col = (Column) obj;
-			return columnName.equals(col.columnName)&&tableOrAlias.equals(col.tableOrAlias);
+			return columnName.equals(col.columnName);
 		}
 		return super.equals(obj);
 	}
+	
 	public boolean isAggregate() {
 		return isAggregate;
 	}
