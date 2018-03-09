@@ -107,7 +107,7 @@ database:IDENTIFIER
 alias :  IDENTIFIER
 ;
 tableName : IDENTIFIER
-|database ('.' IDENTIFIER)*
+|database '.' IDENTIFIER
 ;
 //expression
 booleanExpression:booleanExpression KW_AND booleanExpression
@@ -138,7 +138,7 @@ caseExpression: KW_CASE (KW_WHEN booleanExpression KW_THEN fieldExpression)+ (el
                 | KW_CASE fieldExpression (KW_WHEN fieldExpression KW_THEN fieldExpression)+ (elseClause)? KW_END
 ;
 elseClause:KW_ELSE fieldExpression;
-fieldName : IDENTIFIER ('.' IDENTIFIER)*                 #identifierField
+fieldName : (tableName '.')? IDENTIFIER                  #identifierField
 		|INT                                     #intField
 		|DOUBLE                                  #doubleField
                 |STRING                                  #StringField

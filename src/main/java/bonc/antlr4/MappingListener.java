@@ -65,14 +65,14 @@ public class MappingListener extends sqlBaseListener {
 		joinType.put("Left Join And Replicated Join", "8");
 	}
 	String vertexId;
-	int x = 200;
+	int x = 300;
 	int y = 200;
 	int length = 150;
 	int width = 200;
 	boolean isExpand;
 	{
 		etl.setOid("f03427ae-53f2-472c-bc44-d2344c04396a");
-		etl.setMappingName("antlr别名");
+		etl.setMappingName("24");
 		etl.setExecuteType(0);
 		ETLMappingProxyResource proxyResource = new ETLMappingProxyResource();
 		proxyResource.setPort(0);
@@ -583,11 +583,19 @@ public class MappingListener extends sqlBaseListener {
 		}
 		if (ctx.fromClause().tableSource() instanceof sqlParser.SelectjoinContext) {
 			ctx.uuid = UUID.randomUUID().toString();
+			List<Column> columnList=ctx.fromClause().tableSource().columnList;
 			sqlParser.SelectjoinContext selectjoin = (sqlParser.SelectjoinContext) ctx.fromClause().tableSource();
 			List<sqlParser.TableSourceContext> tablesList = selectjoin.tableSource();
 			List<sqlParser.Join_typeContext> join_typeList = selectjoin.join_type();
 			for(Column col:columnSetUsed) {
-				if(co)
+					for(Column col1:columnList) {
+						
+						if(col.getTableOrAlias().equals("")) {
+							if(col.getColumnName().equals(col1.getColumnName()))
+								col.setTableOrAlias(col1.getTableOrAlias());
+						}
+						
+					}
 			}
 			ETLWidgetInstView e = new ETLWidgetInstView();
 			if (join_typeList.size() == 1) {
@@ -646,17 +654,27 @@ public class MappingListener extends sqlBaseListener {
 				widget3126.setWidgetType("m3126");
 				widget3126.setIsReusable(0);
 			}
-			Map aliasUuid = new HashMap<String, String>();
+			Map<String,String> aliasUuid = new HashMap<String, String>();
 			System.out.println("来源uuid：");
 			for (sqlParser.TableSourceContext table : tablesList) {
 				System.out.print(table.alias + "    ||    ");
 				System.out.println(table.uuid);
 				aliasUuid.put(table.alias, table.uuid);
 			}
-			for (Column col : selectjoin.columnList) {
-
-			}
 			visitColumnList(columnSetUsed);
+			List<ETLWidgetFieldView> widgetFields = new ArrayList<ETLWidgetFieldView>();
+			e.getWidget().setWidgetFields(widgetFields);
+			for(Column col : columnSetUsed) {
+				ETLWidgetFieldView eTLWidgetFieldView = new ETLWidgetFieldView(col.getColumnName(),
+						col.getColumnName(), 255, 0, 95442, 3, 0, 0, null, null, null, null, null,
+						col.getColumnName(), 1);
+				eTLWidgetFieldView.setSortType(0);
+				widgetFields.add(eTLWidgetFieldView);
+				ETLWidgetDepsView eTLWidgetDepsView = new ETLWidgetDepsView(aliasUuid.get(col.getTableOrAlias()), col.getColumnName(),
+						ctx.uuid, col.getColumnName());
+				widgetDeps.add(eTLWidgetDepsView);
+				
+			}
 			System.out.println("当前节点uuid： " + ctx.uuid);
 			for (int i = 0; i < join_typeList.size(); i++) {
 				System.out.println("JOIN类型： " + join_typeList.get(i).getText() + " JOIN");
