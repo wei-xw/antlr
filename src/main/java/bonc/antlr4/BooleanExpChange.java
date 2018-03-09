@@ -10,7 +10,7 @@ import org.antlr.v4.runtime.tree.TerminalNode;
 import bonc.antlr4.entity.Column;
 
 public class BooleanExpChange extends sqlBaseListener {
-	String toExp;
+	String toExp="";
 	List<Column> columnList;
 	public BooleanExpChange(List<Column> columnList) {
 		this.columnList=columnList;
@@ -452,9 +452,10 @@ public class BooleanExpChange extends sqlBaseListener {
 
 	@Override
 	public void exitIdentifierField(sqlParser.IdentifierFieldContext ctx) {
-		if (ctx.getText().equals("user_id")) {
-			System.out.print("#1");
-		}
+		String field=ctx.getText();
+		for(Column col:columnList) 
+			if(col.getColumnName().equals(field)&&col.getColumnNamealias().contains("#"))
+				toExp+="#"+col.getColumnNamealias().split("#")[1];
 	}
 
 	/**

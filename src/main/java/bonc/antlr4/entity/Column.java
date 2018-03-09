@@ -3,6 +3,7 @@ package bonc.antlr4.entity;
 public class Column {
 	private String columnName = "";
 	private String columnNamealias=""; //用于join中给两个表的相同字段加#1，例：ID=>ID#1;
+	private int portType;
 	private String type;
 	private String alias = "";
 	private String exp;
@@ -98,5 +99,11 @@ public class Column {
 	}
 	public void setColumnNamealias(String columnNamealias) {
 		this.columnNamealias = columnNamealias;
+	}
+	public int getPortType() {
+		return portType;
+	}
+	public void setPortType(int portType) {
+		this.portType = portType;
 	}
 }
