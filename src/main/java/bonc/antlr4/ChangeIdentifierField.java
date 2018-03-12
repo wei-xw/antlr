@@ -11,16 +11,15 @@ import org.antlr.v4.runtime.tree.TerminalNode;
 
 import bonc.antlr4.entity.Column;
 
-public class BooleanExpChange extends sqlBaseListener {
+public class ChangeIdentifierField extends sqlBaseListener {
 	String toExp = "";
 	List<Column> columnList;
-	Set<String> tableSet = new HashSet<String>();
 
-	public BooleanExpChange(List<Column> columnList) {
+	public ChangeIdentifierField(List<Column> columnList) {
 		this.columnList = columnList;
 	}
-
 	public void exitIdentifierField(sqlParser.IdentifierFieldContext ctx) {
+		System.out.println(ctx.getText());
 		String field = ctx.IDENTIFIER().getText();
 		if (ctx.tableName() != null) {
 			String database = ctx.tableName().getText();
@@ -28,7 +27,6 @@ public class BooleanExpChange extends sqlBaseListener {
 				if (col.getColumnName().equals(field) && database.equals(col.getTableOrAlias())) {
 					if (col.getColumnNamealias().contains("#"))
 						toExp += "#" + col.getColumnNamealias().split("#")[1];
-					tableSet.add(database);
 				}
 			}
 		} else {
@@ -36,21 +34,15 @@ public class BooleanExpChange extends sqlBaseListener {
 				if (col.getColumnName().equals(field)) {
 					if (col.getColumnNamealias().contains("#"))
 						toExp += "#" + col.getColumnNamealias().split("#")[1];
-					tableSet.add(col.getTableOrAlias());
 				}
 			}
 		}
 
 	}
-
 	List<String> kwList = Arrays.asList("and", "AND", "or", "OR", "is", "IS", "null", "NULL");
-
 	@Override
 	public void visitTerminal(TerminalNode node) {
-		if (kwList.contains(node.getText()))
-			toExp += " " + node.getText() + " ";
-		else
-			toExp += node.getText();
+			toExp +=" "+node.getText();
 	}
 
 }

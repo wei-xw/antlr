@@ -87,16 +87,6 @@ public class MappingListener extends sqlBaseListener {
 		etl.setWidgetDeps(widgetDeps);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>
-	 * The default implementation does nothing.
-	 * </p>
-	 */
-	@Override
-	public void enterProg(sqlParser.ProgContext ctx) {
-	}
 
 	/**
 	 * {@inheritDoc}
@@ -129,38 +119,7 @@ public class MappingListener extends sqlBaseListener {
 
 	}
 
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>
-	 * The default implementation does nothing.
-	 * </p>
-	 */
-	@Override
-	public void enterDmlStatement(sqlParser.DmlStatementContext ctx) {
-	}
 
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>
-	 * The default implementation does nothing.
-	 * </p>
-	 */
-	@Override
-	public void exitDmlStatement(sqlParser.DmlStatementContext ctx) {
-	}
-
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>
-	 * The default implementation does nothing.
-	 * </p>
-	 */
-	@Override
-	public void enterInsertStatement(sqlParser.InsertStatementContext ctx) {
-	}
 
 	/**
 	 * {@inheritDoc}
@@ -278,16 +237,6 @@ public class MappingListener extends sqlBaseListener {
 		}
 	}
 
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>
-	 * The default implementation does nothing.
-	 * </p>
-	 */
-	@Override
-	public void enterUnion(sqlParser.UnionContext ctx) {
-	}
 
 	/**
 	 * {@inheritDoc}
@@ -310,16 +259,7 @@ public class MappingListener extends sqlBaseListener {
 		}
 	}
 
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>
-	 * The default implementation does nothing.
-	 * </p>
-	 */
-	@Override
-	public void enterSelect(sqlParser.SelectContext ctx) {
-	}
+
 
 	/**
 	 * {@inheritDoc}
@@ -347,16 +287,6 @@ public class MappingListener extends sqlBaseListener {
 			return null;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>
-	 * The default implementation does nothing.
-	 * </p>
-	 */
-	@Override
-	public void enterUnionQuery(sqlParser.UnionQueryContext ctx) {
-	}
 
 	/**
 	 * {@inheritDoc}
@@ -528,8 +458,20 @@ public class MappingListener extends sqlBaseListener {
 															// USER_ID PACKAGE_ID,PACKAGE_ID PACKAGE_ID FROM
 															// WXWTEST.TEMP
 		boolean isExpression = false, isGroupBy = false;
+		sqlParser.SelectQueryBlockContext ctxChange=ctx;
 		if (ctx.fromClause().tableSource() != null) {
-			for (sqlParser.ColumnContext columnContext : ctx.selectClause().columnlist().column()) {
+			if (ctx.fromClause().tableSource() instanceof sqlParser.SelectjoinContext) {
+				List<Column> columnList = ctx.fromClause().tableSource().columnList;
+				ParseTreeWalker walker = new  ParseTreeWalker();
+				ChangeIdentifierField listen =new ChangeIdentifierField(columnList);
+			    walker.walk(listen,ctx); 
+			    System.out.println(listen.toExp);
+			    sqlLexer lexer=new sqlLexer(new ANTLRInputStream(listen.toExp));
+			       CommonTokenStream tokens =new CommonTokenStream(lexer);
+			       sqlParser parser = new sqlParser(tokens);
+			       ctxChange=parser.selectQueryBlock();
+			}
+			for (sqlParser.ColumnContext columnContext : ctxChange.selectClause().columnlist().column()) {
 				Column col1 = new Column(), col2 = new Column();
 				if (columnContext.fieldExpression().allFields() == null) {
 					if (columnContext.fieldExpression().fieldName() == null || !(columnContext.fieldExpression()
@@ -573,7 +515,7 @@ public class MappingListener extends sqlBaseListener {
 		ctx.columnList = columnRealList;// 对于list 注意=和addAll的区别
 		Set<Column> groupSet = null;
 		if (ctx.selectAction() != null) {
-			for (sqlParser.SelectActionContext selectAction : ctx.selectAction()) {
+			for (sqlParser.SelectActionContext selectAction : ctxChange.selectAction()) {
 				for (Column col : visitWhere(selectAction.whereClause())) {
 					if (!columnSetUsed.contains(col))
 						columnSetUsed.add(col);
@@ -626,14 +568,9 @@ public class MappingListener extends sqlBaseListener {
 				widget3111.setWidgetType("m3111");
 				widget3111.setIsReusable(0);
 				widget3111.setOid(ctx.uuid);
-				String str = selectjoin.booleanExpression(0).getText();
-				sqlLexer lexer = new sqlLexer(new ANTLRInputStream(str));
-				CommonTokenStream tokens = new CommonTokenStream(lexer);
-				sqlParser parser = new sqlParser(tokens);
-				ParseTree tree = parser.booleanExpression();
 				ParseTreeWalker walker = new ParseTreeWalker();
 				BooleanExpChange listen = new BooleanExpChange(selectjoin.columnList);
-				walker.walk(listen, tree);
+				walker.walk(listen, selectjoin.booleanExpression(0));
 				List<ETLCodeWidgetAttrView> widgetAttrs = new ArrayList<ETLCodeWidgetAttrView>();
 				ETLCodeWidgetAttrView eTLCodeWidgetAttrView = new ETLCodeWidgetAttrView("m3111", 126, "2", "3", "连接条件",
 						listen.toExp, null, 0, 126, "连接条件,由关联设置自动生成，无效手动填写。");
@@ -691,17 +628,18 @@ public class MappingListener extends sqlBaseListener {
 				List<ETLWidgetMulJoinConditionsView> conditions = new ArrayList<ETLWidgetMulJoinConditionsView>();
 				widget3126.setConditions(conditions);
 				for (int i = 0; i < join_typeList.size(); i++) {
-					String str = selectjoin.booleanExpression(i).getText();
-					sqlLexer lexer = new sqlLexer(new ANTLRInputStream(str));
-					CommonTokenStream tokens = new CommonTokenStream(lexer);
-					sqlParser parser = new sqlParser(tokens);
-					ParseTree tree = parser.booleanExpression();
 					ParseTreeWalker walker = new ParseTreeWalker();
 					BooleanExpChange listen = new BooleanExpChange(selectjoin.columnList);
-					walker.walk(listen, tree);
-					conditions.add(new ETLWidgetMulJoinConditionsView(aliasUuid.get(selectjoin.tableSource(i).alias),
+					walker.walk(listen, selectjoin.booleanExpression(i));
+					if(listen.tableSet.size()!=2) {
+						System.out.println("join条件包含的字段需来源于关联的两个表");
+						return;
+					}
+					String[]table = new String[listen.tableSet.size()];
+					listen.tableSet.toArray(table);
+					conditions.add(new ETLWidgetMulJoinConditionsView(aliasUuid.get(table[0]),
 							join_typeList.get(i).getText() + " Join",
-							aliasUuid.get(selectjoin.tableSource(i + 1).alias), listen.toExp));
+							aliasUuid.get(table[1]), listen.toExp));
 				}
 				List<ETLWidgetFieldView> widgetFields = new ArrayList<ETLWidgetFieldView>();
 				e.getWidget().setWidgetFields(widgetFields);
@@ -1328,10 +1266,6 @@ public class MappingListener extends sqlBaseListener {
 		}
 	}
 
-	@Override
-	public void enterSubSelectQuery(sqlParser.SubSelectQueryContext ctx) {
-	}
-
 	/**
 	 * {@inheritDoc}
 	 *
@@ -1358,231 +1292,6 @@ public class MappingListener extends sqlBaseListener {
 	 * </p>
 	 */
 	@Override
-	public void enterSelectAction(sqlParser.SelectActionContext ctx) {
-	}
-
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>
-	 * The default implementation does nothing.
-	 * </p>
-	 */
-	@Override
-	public void exitSelectAction(sqlParser.SelectActionContext ctx) {
-	}
-
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>
-	 * The default implementation does nothing.
-	 * </p>
-	 */
-	@Override
-	public void enterInsertClause(sqlParser.InsertClauseContext ctx) {
-	}
-
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>
-	 * The default implementation does nothing.
-	 * </p>
-	 */
-	@Override
-	public void exitInsertClause(sqlParser.InsertClauseContext ctx) {
-	}
-
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>
-	 * The default implementation does nothing.
-	 * </p>
-	 */
-	@Override
-	public void enterColumnlist(sqlParser.ColumnlistContext ctx) {
-	}
-
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>
-	 * The default implementation does nothing.
-	 * </p>
-	 */
-	@Override
-	public void exitColumnlist(sqlParser.ColumnlistContext ctx) {
-	}
-
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>
-	 * The default implementation does nothing.
-	 * </p>
-	 */
-	@Override
-	public void enterColumn(sqlParser.ColumnContext ctx) {
-	}
-
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>
-	 * The default implementation does nothing.
-	 * </p>
-	 */
-	@Override
-	public void exitColumn(sqlParser.ColumnContext ctx) {
-	}
-
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>
-	 * The default implementation does nothing.
-	 * </p>
-	 */
-	@Override
-	public void enterOrderList(sqlParser.OrderListContext ctx) {
-	}
-
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>
-	 * The default implementation does nothing.
-	 * </p>
-	 */
-	@Override
-	public void exitOrderList(sqlParser.OrderListContext ctx) {
-	}
-
-	@Override
-	public void enterOrderItem(sqlParser.OrderItemContext ctx) {
-	}
-
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>
-	 * The default implementation does nothing.
-	 * </p>
-	 */
-	@Override
-	public void exitOrderItem(sqlParser.OrderItemContext ctx) {
-	}
-
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>
-	 * The default implementation does nothing.
-	 * </p>
-	 */
-	@Override
-	public void enterOrderType(sqlParser.OrderTypeContext ctx) {
-	}
-
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>
-	 * The default implementation does nothing.
-	 * </p>
-	 */
-	@Override
-	public void exitOrderType(sqlParser.OrderTypeContext ctx) {
-	}
-
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>
-	 * The default implementation does nothing.
-	 * </p>
-	 */
-	@Override
-	public void enterAllFields(sqlParser.AllFieldsContext ctx) {
-	}
-
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>
-	 * The default implementation does nothing.
-	 * </p>
-	 */
-	@Override
-	public void exitAllFields(sqlParser.AllFieldsContext ctx) {
-	}
-
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>
-	 * The default implementation does nothing.
-	 * </p>
-	 */
-	@Override
-	public void enterSelectClause(sqlParser.SelectClauseContext ctx) {
-	}
-
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>
-	 * The default implementation does nothing.
-	 * </p>
-	 * SE
-	 */
-	@Override
-	public void exitSelectClause(sqlParser.SelectClauseContext ctx) {
-	}
-
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>
-	 * The default implementation does nothing.
-	 * </p>
-	 */
-	@Override
-	public void enterFromClause(sqlParser.FromClauseContext ctx) {
-	}
-
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>
-	 * The default implementation does nothing.
-	 * </p>
-	 */
-	@Override
-	public void exitFromClause(sqlParser.FromClauseContext ctx) {
-	}
-
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>
-	 * The default implementation does nothing.
-	 * </p>
-	 */
-	@Override
-	public void enterSelectjoin(sqlParser.SelectjoinContext ctx) {
-	}
-
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>
-	 * The default implementation does nothing.
-	 * </p>
-	 */
-	@Override
 	public void exitSelectjoin(sqlParser.SelectjoinContext ctx) {
 		Set<String> colSet = new HashSet<String>();
 		String tmp = null;
@@ -1599,127 +1308,6 @@ public class MappingListener extends sqlBaseListener {
 				ctx.columnList.add(col);// 获取join的表所有字段用于外层sql替换*,并且对于两个表的字段名若相同，ID=>ID#1
 			}
 		}
-	}
-
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>
-	 * The default implementation does nothing.
-	 * </p>
-	 */
-	@Override
-	public void enterJoin_type(sqlParser.Join_typeContext ctx) {
-	}
-
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>
-	 * The default implementation does nothing.
-	 * </p>
-	 */
-	@Override
-	public void exitJoin_type(sqlParser.Join_typeContext ctx) {
-	}
-
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>
-	 * The default implementation does nothing.
-	 * </p>
-	 */
-	@Override
-	public void enterTop(sqlParser.TopContext ctx) {
-	}
-
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>
-	 * The default implementation does nothing.
-	 * </p>
-	 */
-	@Override
-	public void exitTop(sqlParser.TopContext ctx) {
-	}
-
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>
-	 * The default implementation does nothing.
-	 * </p>
-	 */
-	@Override
-	public void enterWhere(sqlParser.WhereContext ctx) {
-	}
-
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>
-	 * The default implementation does nothing.
-	 * </p>
-	 */
-	@Override
-	public void exitWhere(sqlParser.WhereContext ctx) {
-	}
-
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>
-	 * The default implementation does nothing.
-	 * </p>
-	 */
-	@Override
-	public void enterGroupByClause(sqlParser.GroupByClauseContext ctx) {
-	}
-
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>
-	 * The default implementation does nothing.
-	 * </p>
-	 */
-	@Override
-	public void exitGroupByClause(sqlParser.GroupByClauseContext ctx) {
-	}
-
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>
-	 * The default implementation does nothing.
-	 * </p>
-	 */
-	@Override
-	public void enterOrderByClause(sqlParser.OrderByClauseContext ctx) {
-	}
-
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>
-	 * The default implementation does nothing.
-	 * </p>
-	 */
-	@Override
-	public void exitOrderByClause(sqlParser.OrderByClauseContext ctx) {
-	}
-
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>
-	 * The default implementation does nothing.
-	 * </p>
-	 */
-	@Override
-	public void enterSimpleTable(sqlParser.SimpleTableContext ctx) {
 	}
 
 	List<String> colListWXW_ANTLR_DIRECT_TEST = Arrays.asList("USER_ID", "PARTITION_ID", "BINDSALE_ATTR",
@@ -1791,94 +1379,6 @@ public class MappingListener extends sqlBaseListener {
 		s3103.change();
 	}
 
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>
-	 * The default implementation does nothing.
-	 * </p>
-	 */
-	@Override
-	public void enterDatabase(sqlParser.DatabaseContext ctx) {
-	}
-
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>
-	 * The default implementation does nothing.
-	 * </p>
-	 */
-	@Override
-	public void exitDatabase(sqlParser.DatabaseContext ctx) {
-	}
-
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>
-	 * The default implementation does nothing.
-	 * </p>
-	 */
-	@Override
-	public void enterAlias(sqlParser.AliasContext ctx) {
-	}
-
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>
-	 * The default implementation does nothing.
-	 * </p>
-	 */
-	@Override
-	public void exitAlias(sqlParser.AliasContext ctx) {
-	}
-
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>
-	 * The default implementation does nothing.
-	 * </p>
-	 */
-	@Override
-	public void enterTableName(sqlParser.TableNameContext ctx) {
-	}
-
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>
-	 * The default implementation does nothing.
-	 * </p>
-	 */
-	@Override
-	public void exitTableName(sqlParser.TableNameContext ctx) {
-
-	}
-
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>
-	 * The default implementation does nothing.
-	 * </p>
-	 */
-	@Override
-	public void enterOperator(sqlParser.OperatorContext ctx) {
-	}
-
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>
-	 * The default implementation does nothing.
-	 * </p>
-	 */
-	@Override
-	public void exitOperator(sqlParser.OperatorContext ctx) {
-	}
 
 	public void exitFieldExpression(sqlParser.FieldExpressionContext ctx) {
 		ctx.isContainAggMethod = isAggMethod;
@@ -1888,50 +1388,6 @@ public class MappingListener extends sqlBaseListener {
 
 	public void exitAggmethod(sqlParser.AggmethodContext ctx) {
 		isAggMethod = true;
-	}
-
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>
-	 * The default implementation does nothing.
-	 * </p>
-	 */
-	@Override
-	public void enterEveryRule(ParserRuleContext ctx) {
-	}
-
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>
-	 * The default implementation does nothing.
-	 * </p>
-	 */
-	@Override
-	public void exitEveryRule(ParserRuleContext ctx) {
-	}
-
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>
-	 * The default implementation does nothing.
-	 * </p>
-	 */
-	@Override
-	public void visitTerminal(TerminalNode node) {
-	}
-
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>
-	 * The default implementation does nothing.
-	 * </p>
-	 */
-	@Override
-	public void visitErrorNode(ErrorNode node) {
 	}
 
 }
