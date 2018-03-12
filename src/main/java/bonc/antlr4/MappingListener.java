@@ -33,6 +33,9 @@ import com.bonc.dataplatform.repository.workflow.vo.ETLCodeAttrValView;
 import com.thoughtworks.xstream.XStream;
 
 import bonc.antlr4.entity.VertexAddr;
+import bonc.antlr4.service.AbstractNodeService;
+import bonc.antlr4.service.SourceNodeService;
+import bonc.antlr4.service.SourceQulifierNodeService;
 import bonc.antlr4.sqlParser.GroupByClauseContext;
 import bonc.antlr4.entity.Column;
 import bonc.antlr4.entity.Count;
@@ -173,7 +176,6 @@ public class MappingListener extends sqlBaseListener {
 		System.out.println("目标节点");
 		System.out.println("上一个节点uuid： " + ctx.selectStatement().uuid);
 		String fromFieldUid = ctx.selectStatement().uuid;
-
 		// visitInsertClause(ctx.insertClause());
 		ctx.uuid = UUID.randomUUID().toString();
 		visitColumnList(ctx.selectStatement().columnList);
@@ -596,7 +598,6 @@ public class MappingListener extends sqlBaseListener {
 							col.setTableOrAlias(col1.getTableOrAlias());
 							col.setColumnNamealias(col1.getColumnNamealias());
 						}
-
 					}
 				}
 			}
@@ -717,9 +718,7 @@ public class MappingListener extends sqlBaseListener {
 					widgetDeps.add(eTLWidgetDepsView);
 				}
 			}
-
 			visitColumnList(columnSetUsed);
-
 			System.out.println("当前节点uuid： " + ctx.uuid);
 			for (int i = 0; i < join_typeList.size(); i++) {
 				System.out.println("JOIN类型： " + join_typeList.get(i).getText() + " JOIN");
@@ -1755,7 +1754,7 @@ public class MappingListener extends sqlBaseListener {
 	public void exitSimpleTable(sqlParser.SimpleTableContext ctx) {
 		// ctx.columnAllList=getFrom元数据 //该表的所有字段
 		List<String> colList = (List<String>) tableCols.get(ctx.tableName().IDENTIFIER().getText());
-		ctx.tableName = ctx.tableName().getText();
+		ctx.tableName = ctx.tableName().getText();//这里tablename包含database
 		ctx.alias = ctx.tableName;
 		if (ctx.alias() != null)
 			ctx.alias = ctx.alias().getText();
@@ -1765,115 +1764,31 @@ public class MappingListener extends sqlBaseListener {
 			col.setTableOrAlias(ctx.alias);
 			ctx.columnList.add(col);
 		}
-		ETLWidgetInstView e3101 = new ETLWidgetInstView(), e3103 = new ETLWidgetInstView();
-		widgetInsts.add(e3101);
-		widgetInsts.add(e3103);
-
+		SourceNodeService s3101=new SourceNodeService();
+		SourceQulifierNodeService s3103=new SourceQulifierNodeService();
+		widgetInsts.add(s3101.geteTLWidgetInstView());
+		widgetInsts.add(s3103.geteTLWidgetInstView());
+		s3101.init();
+		s3103.init();
 		ctx.uuid = UUID.randomUUID().toString();
-		e3101.setWidgetInstId(ctx.uuid);
+		s3101.setUuid(ctx.uuid);
 		VertexAddrs.add(new VertexAddr(ctx.uuid, x, y, length, width, false));
 		ctx.uuid = UUID.randomUUID().toString();
-		e3103.setWidgetInstId(ctx.uuid);
+		s3103.setUuid(ctx.uuid);
 		VertexAddrs.add(new VertexAddr(ctx.uuid, x, y += 100, length, width, false));
-
 		System.out.println("源节点：");
 		System.out.print(ctx.tableName);
 		System.out.println(" 别名：" + ctx.alias);
 		System.out.println("当前节点uuid： " + ctx.uuid);
 		System.out.println(ctx.columnList.size() + "个字段");
 		visitColumnList(ctx.columnList);
+		s3101.column(ctx.columnList);
 		System.out.println();
-		e3101.setWidgetType("m3101");
-		e3101.setInstancName("a22b7bcef62f464a95af68b38e462627_1");
-		ETLWidgetView widget3101 = new ETLWidgetView(), widget3103 = new ETLWidgetView();
-		e3101.setWidget(widget3101);
-		widget3101.setOid("88406491");
-		widget3101.setWidgetName("a22b7bcef62f464a95af68b38e462627");
-		widget3101.setWidgetType("m3101");
-		widget3101.setModelId("m6");
-		List<ETLWidgetFieldView> widgetFields = new ArrayList<ETLWidgetFieldView>();
-		widget3101.setWidgetFields(widgetFields);
-		for (Column col : ctx.columnList) {
-			ETLWidgetFieldView eTLWidgetFieldView = new ETLWidgetFieldView(col.getColumnName(), col.getColumnName(),
-					255, 0, 95442, 3, 0, 0, null, null, null, null, null, null, 1);
-			eTLWidgetFieldView.setSortType(0);
-			widgetFields.add(eTLWidgetFieldView);
-		}
-		widget3101.setIsReusable(0);
-		widget3101.setOwner(ctx.tableName().database().getText());// 不对哦
-		e3103.setWidgetType("m3103");
-		e3103.setInstancName(ctx.tableName().IDENTIFIER().getText() + "_1");
-		e3103.setWidget(widget3103);
-		widget3103.setOid(ctx.uuid);
-		widget3103.setWidgetName(ctx.tableName().IDENTIFIER().getText());
-		widget3103.setWidgetType("m3103");
-		widget3103.setModelId("m6");
-		List<ETLCodeWidgetAttrView> widgetAttrs = new ArrayList<ETLCodeWidgetAttrView>();
-		ETLCodeWidgetAttrView eTLCodeWidgetAttrView = new ETLCodeWidgetAttrView();
-		eTLCodeWidgetAttrView.setObjectType("m3103");
-		eTLCodeWidgetAttrView.setAttrId(51);
-		eTLCodeWidgetAttrView.setAttrType("3");
-		eTLCodeWidgetAttrView.setAttrName("预处理脚本");
-		eTLCodeWidgetAttrView.setParentId(0);
-		eTLCodeWidgetAttrView.setOrd(1);
-		eTLCodeWidgetAttrView.setAttrComment(
-				"可以设置合理的分区、索引、排序条件，有助于提高执行效率.例如 month_id='201611' 或者 limit 10 或者order by ID .源转换是hive表并且执行引擎为pig的情况不支持预处理脚本");
-		eTLCodeWidgetAttrView.setAttrCode("1");
-		eTLCodeWidgetAttrView.setBitflags("0");
-		eTLCodeWidgetAttrView.setAttrDataType("3");
-		widgetAttrs.add(eTLCodeWidgetAttrView);
-		ETLCodeWidgetAttrView eTLCodeWidgetAttrView3 = new ETLCodeWidgetAttrView();
-		eTLCodeWidgetAttrView3.setObjectType("m3103");
-		eTLCodeWidgetAttrView3.setAttrId(226);
-		eTLCodeWidgetAttrView3.setAttrType("3");
-		eTLCodeWidgetAttrView3.setAttrDataType("3");
-		eTLCodeWidgetAttrView3.setAttrName("分区");
-		eTLCodeWidgetAttrView3.setParentId(0);
-		eTLCodeWidgetAttrView3.setOrd(10);
-		eTLCodeWidgetAttrView3.setAttrComment("源是kafka是可以通过此属性指定读取分区值，值要是数值类型");
-		eTLCodeWidgetAttrView3.setAttrCode("10");
-		eTLCodeWidgetAttrView3.setBitflags("0");
-		widgetAttrs.add(eTLCodeWidgetAttrView3);
-		ETLCodeWidgetAttrView eTLCodeWidgetAttrView1 = new ETLCodeWidgetAttrView();
-		eTLCodeWidgetAttrView1.setObjectType("m3103");
-		eTLCodeWidgetAttrView1.setAttrId(227);
-		eTLCodeWidgetAttrView1.setAttrType("3");
-		eTLCodeWidgetAttrView1.setAttrName("源对象名称");
-		eTLCodeWidgetAttrView1.setAttrVal(ctx.tableName().IDENTIFIER().getText());
-		eTLCodeWidgetAttrView1.setParentId(0);
-		eTLCodeWidgetAttrView1.setOrd(11);
-		eTLCodeWidgetAttrView1.setAttrComment("若是文件，文件名称支持正则表达式");
-		eTLCodeWidgetAttrView1.setAttrCode("11");
-		eTLCodeWidgetAttrView1.setBitflags("0");
-		eTLCodeWidgetAttrView1.setAttrDataType("3");
-		widgetAttrs.add(eTLCodeWidgetAttrView1);
-		ETLCodeWidgetAttrView eTLCodeWidgetAttrView2 = new ETLCodeWidgetAttrView();
-		eTLCodeWidgetAttrView2.setObjectType("m3103");
-		eTLCodeWidgetAttrView2.setAttrId(240);
-		eTLCodeWidgetAttrView2.setAttrType("3");
-		eTLCodeWidgetAttrView2.setAttrDataType("3");
-		eTLCodeWidgetAttrView2.setAttrName("表的所属用户");
-		eTLCodeWidgetAttrView2.setAttrVal(ctx.tableName().database().getText());
-		eTLCodeWidgetAttrView2.setParentId(0);
-		eTLCodeWidgetAttrView2.setOrd(12);
-		eTLCodeWidgetAttrView2.setAttrComment("表的所属用户");
-		eTLCodeWidgetAttrView2.setAttrCode("12");
-		eTLCodeWidgetAttrView2.setBitflags("0");
-		widgetAttrs.add(eTLCodeWidgetAttrView2);
-		widget3103.setWidgetAttrs(widgetAttrs);
-		List<ETLWidgetFieldView> widgetFields3103 = new ArrayList<ETLWidgetFieldView>();
-		widget3103.setWidgetFields(widgetFields3103);
-		for (Column col : ctx.columnList) {
-			ETLWidgetFieldView eTLWidgetFieldView = new ETLWidgetFieldView(col.getColumnName(), col.getColumnName(),
-					255, 0, 95442, 3, 0, 0, null, null, null, null, null, null, 1);
-			eTLWidgetFieldView.setSortType(0);
-			widgetFields3103.add(eTLWidgetFieldView);
-			ETLWidgetDepsView eTLWidgetDepsView = new ETLWidgetDepsView(e3101.getWidgetInstId(), col.getColumnName(),
-					e3103.getWidgetInstId(), col.getColumnName());
-			widgetDeps.add(eTLWidgetDepsView);
-		}
-		widget3103.setIsReusable(0);
-		widget3103.setOwner(ctx.tableName().database().getText());// 不对哦
+		s3101.setOwner(ctx.tableName().database().getText());// 不对哦
+		s3103.setOwner(ctx.tableName().database().getText());
+		s3103.setInstancName(ctx.tableName().IDENTIFIER().getText());
+		s3103.column(s3101.getUuid(), ctx.columnList, widgetDeps);
+		s3103.change();
 	}
 
 	/**
