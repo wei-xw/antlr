@@ -14,11 +14,7 @@ import java.util.UUID;
 
 import org.antlr.v4.runtime.ANTLRInputStream;
 import org.antlr.v4.runtime.CommonTokenStream;
-import org.antlr.v4.runtime.ParserRuleContext;
-import org.antlr.v4.runtime.tree.ErrorNode;
-import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.ParseTreeWalker;
-import org.antlr.v4.runtime.tree.TerminalNode;
 
 import com.bonc.dataplatform.repository.mapping.vo.ETLCodeWidgetAttrView;
 import com.bonc.dataplatform.repository.mapping.vo.ETLMappingProxyResource;
@@ -33,7 +29,6 @@ import com.bonc.dataplatform.repository.workflow.vo.ETLCodeAttrValView;
 import com.thoughtworks.xstream.XStream;
 
 import bonc.antlr4.entity.VertexAddr;
-import bonc.antlr4.service.AbstractNodeService;
 import bonc.antlr4.service.SourceNodeService;
 import bonc.antlr4.service.SourceQulifierNodeService;
 import bonc.antlr4.sqlParser.GroupByClauseContext;
@@ -48,8 +43,8 @@ public class MappingListener extends sqlBaseListener {
 	List<ETLWidgetInstView> widgetInsts = new ArrayList<ETLWidgetInstView>();
 	List<ETLWidgetDepsView> widgetDeps = new ArrayList<ETLWidgetDepsView>();
 	List<VertexAddr> VertexAddrs = new ArrayList<VertexAddr>();
-	Map nodeName = new HashMap<String, Count>();
-	Map joinType = new HashMap<String, String>();
+	Map<String, Count> nodeName = new HashMap<String, Count>();
+	Map<String, String> joinType = new HashMap<String, String>();
 	{
 		nodeName.put("m3106", new Count());
 		nodeName.put("m3102", new Count());
@@ -87,15 +82,6 @@ public class MappingListener extends sqlBaseListener {
 		etl.setWidgetDeps(widgetDeps);
 	}
 
-
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>
-	 * The default implementation does nothing.
-	 * </p>
-	 */
-	@Override
 	public void exitProg(sqlParser.ProgContext ctx) {
 		XStream xstream = new XStream();
 		xstream.alias("VertexAddrs", List.class);
@@ -119,16 +105,6 @@ public class MappingListener extends sqlBaseListener {
 
 	}
 
-
-
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>
-	 * The default implementation does nothing.
-	 * </p>
-	 */
-	@Override
 	public void exitInsertStatement(sqlParser.InsertStatementContext ctx) {
 		ETLWidgetInstView e = new ETLWidgetInstView();
 		widgetInsts.add(e);
@@ -139,7 +115,7 @@ public class MappingListener extends sqlBaseListener {
 		ctx.uuid = UUID.randomUUID().toString();
 		visitColumnList(ctx.selectStatement().columnList);
 		System.out.println("当前节点uuid： " + ctx.uuid);
-		List<String> colList = (List<String>) tableCols.get(ctx.insertClause().tableName().IDENTIFIER().getText());
+		List<String> colList = tableCols.get(ctx.insertClause().tableName().IDENTIFIER().getText());
 		System.out.println("当前节点字段:");
 		for (String tmp : colList) {
 			Column col = new Column();
@@ -222,7 +198,6 @@ public class MappingListener extends sqlBaseListener {
 	}
 
 	private void visitColumnList(List<Column> columnList) {
-		// TODO Auto-generated method stub
 		System.out.println("字段：");
 		for (Column column : columnList) {
 			System.out.println(column.getColumnName());
@@ -230,22 +205,12 @@ public class MappingListener extends sqlBaseListener {
 	}
 
 	private void visitColumnList(Set<Column> columnSet) {
-		// TODO Auto-generated method stub
 		System.out.println("字段：");
 		for (Column column : columnSet) {
 			System.out.println(column.getColumnName());
 		}
 	}
 
-
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>
-	 * The default implementation does nothing.
-	 * </p>
-	 */
-	@Override
 	public void exitUnion(sqlParser.UnionContext ctx) {
 		ctx.columnList = ctx.unionQuery().columnList;
 		ctx.uuid = ctx.unionQuery().uuid;
@@ -259,16 +224,6 @@ public class MappingListener extends sqlBaseListener {
 		}
 	}
 
-
-
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>
-	 * The default implementation does nothing.
-	 * </p>
-	 */
-	@Override
 	public void exitSelect(sqlParser.SelectContext ctx) {
 		ctx.columnList = ctx.selectQueryBlock().columnList;
 		ctx.uuid = ctx.selectQueryBlock().uuid;
@@ -287,15 +242,6 @@ public class MappingListener extends sqlBaseListener {
 			return null;
 	}
 
-
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>
-	 * The default implementation does nothing.
-	 * </p>
-	 */
-	@Override
 	public void exitUnionQuery(sqlParser.UnionQueryContext ctx) {
 		List<Column> columnListMore = new ArrayList<Column>();
 		List<sqlParser.SelectQueryBlock1Context> list = ctx.selectQueryBlock1();
@@ -303,20 +249,19 @@ public class MappingListener extends sqlBaseListener {
 		ETLWidgetInstView e = new ETLWidgetInstView();
 		widgetInsts.add(e);
 		e.setWidgetType("m3122");
-		int idex = ((Count) nodeName.get("m3122")).getI();
+		int idex = nodeName.get("m3122").getI();
 		e.setInstancName("联合转换" + idex);
 		ETLWidgetView widget3122 = new ETLWidgetView();
 		e.setWidget(widget3122);
 		widget3122.setOid(e.getOid());
 		widget3122.setWidgetName("联合转换" + idex);
-		((Count) nodeName.get("m3122")).setI(++idex);
+		nodeName.get("m3122").setI(++idex);
 		widget3122.setWidgetType("m3122");
 		widget3122.setIsReusable(0);
 		for (int i = 0; i < list.size(); i++) {
 			ctx.columnList = list.get(i).columnList;
 			ctx.uuid = list.get(i).uuid;
 			System.out.println("第" + (i + 1) + "个前节点uuid:" + ctx.uuid);
-			String fromFieldUid = ctx.uuid;
 			visitColumnList(ctx.columnList);
 		}
 		ctx.uuid = UUID.randomUUID().toString();
@@ -368,17 +313,6 @@ public class MappingListener extends sqlBaseListener {
 		visitColumnList(columnListMore);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>
-	 * The default implementation does nothing.
-	 * </p>
-	 */
-	@Override
-	public void enterSelectQueryBlock(sqlParser.SelectQueryBlockContext ctx) {
-	}
-
 	private Set<Column> visitFieldExpression(sqlParser.FieldExpressionContext fieldExpression) {
 		Set<Column> hs = new HashSet<Column>();
 		Column col = new Column();
@@ -399,7 +333,6 @@ public class MappingListener extends sqlBaseListener {
 				col.setTableOrAlias(identifier.tableName().getText());
 			hs.add(col);
 		}
-
 		return hs;
 	}
 
@@ -440,36 +373,26 @@ public class MappingListener extends sqlBaseListener {
 		return hs;
 	}
 
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>
-	 * The default implementation does nothing.
-	 * </p>
-	 */
-	@Override
 	public void exitSelectQueryBlock(sqlParser.SelectQueryBlockContext ctx) {
 		ctx.uuid = ctx.fromClause().tableSource().uuid;
-		// 填节点的字段
-		// 填当前节点的
 		List<Column> columnRealList = new ArrayList<Column>();
 		List<Column> columnOutList = new ArrayList<Column>();
 		Set<Column> columnSetUsed = new HashSet<Column>();// 当前select块需要的from字句的字段，作为表达式节点的端口（表达式节点的端口不允许重复），因此不支持SELECT
 															// USER_ID PACKAGE_ID,PACKAGE_ID PACKAGE_ID FROM
 															// WXWTEST.TEMP
 		boolean isExpression = false, isGroupBy = false;
-		sqlParser.SelectQueryBlockContext ctxChange=ctx;
+		sqlParser.SelectQueryBlockContext ctxChange = ctx;
 		if (ctx.fromClause().tableSource() != null) {
 			if (ctx.fromClause().tableSource() instanceof sqlParser.SelectjoinContext) {
 				List<Column> columnList = ctx.fromClause().tableSource().columnList;
-				ParseTreeWalker walker = new  ParseTreeWalker();
-				ChangeIdentifierField listen =new ChangeIdentifierField(columnList);
-			    walker.walk(listen,ctx); 
-			    System.out.println(listen.toExp);
-			    sqlLexer lexer=new sqlLexer(new ANTLRInputStream(listen.toExp));
-			       CommonTokenStream tokens =new CommonTokenStream(lexer);
-			       sqlParser parser = new sqlParser(tokens);
-			       ctxChange=parser.selectQueryBlock();
+				ParseTreeWalker walker = new ParseTreeWalker();
+				ChangeIdentifierField listen = new ChangeIdentifierField(columnList);
+				walker.walk(listen, ctx);
+				System.out.println(listen.toExp);
+				sqlLexer lexer = new sqlLexer(new ANTLRInputStream(listen.toExp));
+				CommonTokenStream tokens = new CommonTokenStream(lexer);
+				sqlParser parser = new sqlParser(tokens);
+				ctxChange = parser.selectQueryBlock();
 			}
 			for (sqlParser.ColumnContext columnContext : ctxChange.selectClause().columnlist().column()) {
 				Column col1 = new Column(), col2 = new Column();
@@ -552,19 +475,19 @@ public class MappingListener extends sqlBaseListener {
 			for (sqlParser.TableSourceContext table : tablesList) {
 				System.out.print(table.alias + "    ||    ");
 				System.out.println(table.uuid);
-				aliasUuid.put( table.alias, table.uuid);// 需要改
+				aliasUuid.put(table.alias, table.uuid);// 需要改
 			}
 			if (join_typeList.size() == 1) {
 				System.out.println("连接节点");
 				widgetInsts.add(e);
 				e.setWidgetType("m3111");
-				int idex = ((Count) nodeName.get("m3111")).getI();
+				int idex = nodeName.get("m3111").getI();
 				e.setInstancName("连接转换" + idex);
 				ETLWidgetView widget3111 = new ETLWidgetView();
 				e.setWidget(widget3111);
 				widget3111.setOid(e.getOid());
 				widget3111.setWidgetName("连接转换" + idex);
-				((Count) nodeName.get("m3111")).setI(++idex);
+				nodeName.get("m3111").setI(++idex);
 				widget3111.setWidgetType("m3111");
 				widget3111.setIsReusable(0);
 				widget3111.setOid(ctx.uuid);
@@ -587,8 +510,7 @@ public class MappingListener extends sqlBaseListener {
 				attrValScope.add(new ETLCodeAttrValView("7", "Inner Join And Merge Join"));
 				attrValScope.add(new ETLCodeAttrValView("8", "Left Join And Replicated Join"));
 				eTLCodeWidgetAttrView = new ETLCodeWidgetAttrView("m3111", 127, "6", "1", "连接类型",
-						(String) joinType.get(join_typeList.get(0).getText()), attrValScope, 0, 127,
-						"连接类型,由关联设置自动生成，无效手动填写。");
+						joinType.get(join_typeList.get(0).getText()), attrValScope, 0, 127, "连接类型,由关联设置自动生成，无效手动填写。");
 				eTLCodeWidgetAttrView.setAttrCode("4");
 				eTLCodeWidgetAttrView.setBitflags("0");
 				widgetAttrs.add(eTLCodeWidgetAttrView);
@@ -615,13 +537,13 @@ public class MappingListener extends sqlBaseListener {
 				System.out.println("多连接节点");
 				widgetInsts.add(e);
 				e.setWidgetType("m3126");
-				int idex = ((Count) nodeName.get("m3126")).getI();
+				int idex = nodeName.get("m3126").getI();
 				e.setInstancName("多表连接转换" + idex);
 				ETLWidgetView widget3126 = new ETLWidgetView();
 				e.setWidget(widget3126);
 				widget3126.setOid(e.getOid());
 				widget3126.setWidgetName("多表连接转换" + idex);
-				((Count) nodeName.get("m3126")).setI(++idex);
+				nodeName.get("m3126").setI(++idex);
 				widget3126.setWidgetType("m3126");
 				widget3126.setIsReusable(0);
 				widget3126.setOid(ctx.uuid);
@@ -631,15 +553,14 @@ public class MappingListener extends sqlBaseListener {
 					ParseTreeWalker walker = new ParseTreeWalker();
 					BooleanExpChange listen = new BooleanExpChange(selectjoin.columnList);
 					walker.walk(listen, selectjoin.booleanExpression(i));
-					if(listen.tableSet.size()!=2) {
+					if (listen.tableSet.size() != 2) {
 						System.out.println("join条件包含的字段需来源于关联的两个表");
 						return;
 					}
-					String[]table = new String[listen.tableSet.size()];
+					String[] table = new String[listen.tableSet.size()];
 					listen.tableSet.toArray(table);
 					conditions.add(new ETLWidgetMulJoinConditionsView(aliasUuid.get(table[0]),
-							join_typeList.get(i).getText() + " Join",
-							aliasUuid.get(table[1]), listen.toExp));
+							join_typeList.get(i).getText() + " Join", aliasUuid.get(table[1]), listen.toExp));
 				}
 				List<ETLWidgetFieldView> widgetFields = new ArrayList<ETLWidgetFieldView>();
 				e.getWidget().setWidgetFields(widgetFields);
@@ -673,7 +594,6 @@ public class MappingListener extends sqlBaseListener {
 			for (Column col : columnRealList)
 				col.setTableOrAlias(tableAlias);
 		}
-
 		if (ctx.selectAction() != null) {
 			for (sqlParser.SelectActionContext selectAction : ctx.selectAction()) {
 				ETLWidgetInstView e = new ETLWidgetInstView();
@@ -707,7 +627,6 @@ public class MappingListener extends sqlBaseListener {
 					e.getWidget().setIsReusable(0);
 					System.out.println();
 				}
-
 			}
 		}
 		if (isExpression && !isGroupBy) {
@@ -734,13 +653,13 @@ public class MappingListener extends sqlBaseListener {
 			}
 			Set<String> colSet = new HashSet<String>();
 			e.setWidgetType("m3105");
-			int idex = ((Count) nodeName.get("m3105")).getI();
+			int idex = nodeName.get("m3105").getI();
 			e.setInstancName("表达式转换" + idex);
 			ETLWidgetView widget3105 = new ETLWidgetView();
 			e.setWidget(widget3105);
 			widget3105.setOid(e.getOid());
 			widget3105.setWidgetName("表达式转换" + idex);
-			((Count) nodeName.get("m3105")).setI(++idex);
+			nodeName.get("m3105").setI(++idex);
 			widget3105.setWidgetType("m3105");
 			widget3105.setIsReusable(0);
 			System.out.println("当前节点的字段");
@@ -812,19 +731,18 @@ public class MappingListener extends sqlBaseListener {
 			}
 			Set<String> colSet = new HashSet<String>();
 			e.setWidgetType("m3107");
-			int idex = ((Count) nodeName.get("m3107")).getI();
+			int idex = nodeName.get("m3107").getI();
 			e.setInstancName("汇总转换" + idex);
 			ETLWidgetView widget3107 = new ETLWidgetView();
 			e.setWidget(widget3107);
 			widget3107.setOid(e.getOid());
 			widget3107.setWidgetName("汇总转换" + idex);
-			((Count) nodeName.get("m3107")).setI(++idex);
+			nodeName.get("m3107").setI(++idex);
 			widget3107.setWidgetType("m3107");
 			List<ETLCodeWidgetAttrView> widgetAttrs = new ArrayList<ETLCodeWidgetAttrView>();
 			List<ETLCodeAttrValView> attrValScope = new ArrayList<ETLCodeAttrValView>();
 			attrValScope.add(new ETLCodeAttrValView("0", "否"));
 			attrValScope.add(new ETLCodeAttrValView("1", "是"));
-
 			ETLCodeWidgetAttrView eTLCodeWidgetAttrView = new ETLCodeWidgetAttrView("m3107", 228, "6", "1", "是否按所有字段分组",
 					"0", attrValScope, 0, 228, "是否按所有字段分组");
 			eTLCodeWidgetAttrView.setAttrCode("7");
@@ -997,7 +915,6 @@ public class MappingListener extends sqlBaseListener {
 					e.getWidget().setIsReusable(0);
 					System.out.println();
 				}
-
 			}
 		}
 		if (isExpression && !isGroupBy) {
@@ -1024,13 +941,13 @@ public class MappingListener extends sqlBaseListener {
 			}
 			Set<String> colSet = new HashSet<String>();
 			e.setWidgetType("m3105");
-			int idex = ((Count) nodeName.get("m3105")).getI();
+			int idex = nodeName.get("m3105").getI();
 			e.setInstancName("表达式转换" + idex);
 			ETLWidgetView widget3105 = new ETLWidgetView();
 			e.setWidget(widget3105);
 			widget3105.setOid(e.getOid());
 			widget3105.setWidgetName("表达式转换" + idex);
-			((Count) nodeName.get("m3105")).setI(++idex);
+			nodeName.get("m3105").setI(++idex);
 			widget3105.setWidgetType("m3105");
 			widget3105.setIsReusable(0);
 			System.out.println("当前节点的字段");
@@ -1101,13 +1018,13 @@ public class MappingListener extends sqlBaseListener {
 			}
 			Set<String> colSet = new HashSet<String>();
 			e.setWidgetType("m3107");
-			int idex = ((Count) nodeName.get("m3107")).getI();
+			int idex = nodeName.get("m3107").getI();
 			e.setInstancName("汇总转换" + idex);
 			ETLWidgetView widget3107 = new ETLWidgetView();
 			e.setWidget(widget3107);
 			widget3107.setOid(e.getOid());
 			widget3107.setWidgetName("汇总转换" + idex);
-			((Count) nodeName.get("m3107")).setI(++idex);
+			nodeName.get("m3107").setI(++idex);
 			widget3107.setWidgetType("m3107");
 			List<ETLCodeWidgetAttrView> widgetAttrs = new ArrayList<ETLCodeWidgetAttrView>();
 			List<ETLCodeAttrValView> attrValScope = new ArrayList<ETLCodeAttrValView>();
@@ -1193,41 +1110,13 @@ public class MappingListener extends sqlBaseListener {
 		return hs;
 	}
 
-	private void printOrderBy(sqlParser.OrderByClauseContext orderByClause) {
-		// TODO Auto-generated method stub
-		if (orderByClause != null) {
-			System.out.println("排序节点");
-			System.out.println("排序条件：");
-			for (sqlParser.OrderItemContext item : orderByClause.orderList().orderItem()) {
-				System.out.println(item.getText());
-			}
-		}
-	}
-
-	private void printGroupBy(sqlParser.GroupByClauseContext groupByClause, ETLWidgetInstView e) {
-		// TODO Auto-generated method stub
-		if (groupByClause != null) {
-			System.out.println("汇总节点");
-			// e.setWidgetType("m3105");
-			// int idex = ((Count) nodeName.get("m3105")).getI();
-			// e.setInstancName("表达式转换" + idex);
-			// ETLWidgetView widget3105 = new ETLWidgetView();
-			// e.setWidget(widget3105);
-			// widget3105.setOid(e.getOid());
-			// widget3105.setWidgetName("表达式转换" + idex);
-			// ((Count) nodeName.get("m3105")).setI(++idex);
-			// widget3105.setWidgetType("m3105");
-		}
-	}
-
 	private Set<Column> visitWhere(sqlParser.WhereClauseContext whereClause) {
-		// TODO Auto-generated method stub
 		if (whereClause != null) {
 			if (whereClause instanceof sqlParser.WhereContext) {
 				sqlParser.WhereContext where = (sqlParser.WhereContext) whereClause;
 				return visitBooleanExpression(where.booleanExpression());
 			} else {
-				sqlParser.TopContext top = (sqlParser.TopContext) whereClause;
+				// sqlParser.TopContext top = (sqlParser.TopContext) whereClause;
 				return new HashSet<Column>();
 			}
 		}
@@ -1235,20 +1124,19 @@ public class MappingListener extends sqlBaseListener {
 	}
 
 	private void printWhere(sqlParser.WhereClauseContext whereClause, ETLWidgetInstView e) {
-		// TODO Auto-generated method stub
 		if (whereClause != null) {
 			if (whereClause instanceof sqlParser.WhereContext) {
 				sqlParser.WhereContext where = (sqlParser.WhereContext) whereClause;
 				System.out.println("筛选节点");
 				System.out.println("筛选条件:" + where.booleanExpression().getText());
 				e.setWidgetType("m3106");
-				int idex = ((Count) nodeName.get("m3106")).getI();
+				int idex = nodeName.get("m3106").getI();
 				e.setInstancName("筛选器转换" + idex);
 				ETLWidgetView widget3106 = new ETLWidgetView();
 				e.setWidget(widget3106);
 				widget3106.setOid(e.getOid());
 				widget3106.setWidgetName("筛选器转换" + idex);
-				((Count) nodeName.get("m3106")).setI(++idex);
+				nodeName.get("m3106").setI(++idex);
 				widget3106.setWidgetType("m3106");
 				List<ETLCodeWidgetAttrView> widgetAttrs = new ArrayList<ETLCodeWidgetAttrView>();
 				ETLCodeWidgetAttrView eTLCodeWidgetAttrView = new ETLCodeWidgetAttrView("m3106", 66, "2", "3", "过滤条件",
@@ -1266,14 +1154,6 @@ public class MappingListener extends sqlBaseListener {
 		}
 	}
 
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>
-	 * The default implementation does nothing.
-	 * </p>
-	 */
-	@Override
 	public void exitSubSelectQuery(sqlParser.SubSelectQueryContext ctx) {
 		ctx.uuid = ctx.selectStatement().uuid;
 		ctx.alias = ctx.alias().getText();
@@ -1284,14 +1164,6 @@ public class MappingListener extends sqlBaseListener {
 
 	}
 
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>
-	 * The default implementation does nothing.
-	 * </p>
-	 */
-	@Override
 	public void exitSelectjoin(sqlParser.SelectjoinContext ctx) {
 		Set<String> colSet = new HashSet<String>();
 		String tmp = null;
@@ -1323,7 +1195,7 @@ public class MappingListener extends sqlBaseListener {
 			"DEPART_ID", "START_DATE", "END_DATE", "REMARK", "ITEM_ID", "MONTH_ID", "DAY_ID");
 	List<String> colListWXW_ANTLR_A = Arrays.asList("ID", "NAME", "ADDRESS", "TEL", "E_MAIL");
 	List<String> colListWXW_ANTLR_B = Arrays.asList("B_ID", "B_NAME", "B_ADDRESS", "B_TEL", "B_E_MAIL");
-	Map tableCols = new HashMap<String, List<String>>();
+	Map<String, List<String>> tableCols = new HashMap<String, List<String>>();
 	{
 		tableCols.put("WXW_ANTLR_DIRECT_TEST", colListWXW_ANTLR_DIRECT_TEST);
 		tableCols.put("WXW_ANTLR_TEST", colListWXW_ANTLR_TEST);
@@ -1331,18 +1203,10 @@ public class MappingListener extends sqlBaseListener {
 		tableCols.put("WXW_ANTLR_B", colListWXW_ANTLR_B);
 	}
 
-	/**
-	 * {@inheritDoc}
-	 *
-	 * <p>
-	 * The default implementation does nothing.
-	 * </p>
-	 */
-	@Override
 	public void exitSimpleTable(sqlParser.SimpleTableContext ctx) {
 		// ctx.columnAllList=getFrom元数据 //该表的所有字段
-		List<String> colList = (List<String>) tableCols.get(ctx.tableName().IDENTIFIER().getText());
-		ctx.tableName = ctx.tableName().getText();//这里tablename包含database
+		List<String> colList = tableCols.get(ctx.tableName().IDENTIFIER().getText());
+		ctx.tableName = ctx.tableName().getText();// 这里tablename包含database
 		ctx.alias = ctx.tableName;
 		if (ctx.alias() != null)
 			ctx.alias = ctx.alias().getText();
@@ -1352,8 +1216,8 @@ public class MappingListener extends sqlBaseListener {
 			col.setTableOrAlias(ctx.alias);
 			ctx.columnList.add(col);
 		}
-		SourceNodeService s3101=new SourceNodeService();
-		SourceQulifierNodeService s3103=new SourceQulifierNodeService();
+		SourceNodeService s3101 = new SourceNodeService();
+		SourceQulifierNodeService s3103 = new SourceQulifierNodeService();
 		widgetInsts.add(s3101.geteTLWidgetInstView());
 		widgetInsts.add(s3103.geteTLWidgetInstView());
 		s3101.init();
@@ -1379,7 +1243,6 @@ public class MappingListener extends sqlBaseListener {
 		s3103.change();
 	}
 
-
 	public void exitFieldExpression(sqlParser.FieldExpressionContext ctx) {
 		ctx.isContainAggMethod = isAggMethod;
 	}
@@ -1389,5 +1252,4 @@ public class MappingListener extends sqlBaseListener {
 	public void exitAggmethod(sqlParser.AggmethodContext ctx) {
 		isAggMethod = true;
 	}
-
 }

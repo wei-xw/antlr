@@ -5,8 +5,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.antlr.v4.runtime.ParserRuleContext;
-import org.antlr.v4.runtime.tree.ErrorNode;
 import org.antlr.v4.runtime.tree.TerminalNode;
 
 import bonc.antlr4.entity.Column;
@@ -45,7 +43,6 @@ public class BooleanExpChange extends sqlBaseListener {
 
 	List<String> kwList = Arrays.asList("and", "AND", "or", "OR", "is", "IS", "null", "NULL");
 
-	@Override
 	public void visitTerminal(TerminalNode node) {
 		if (kwList.contains(node.getText()))
 			toExp += " " + node.getText() + " ";

@@ -1,8 +1,4 @@
 package bonc.antlr4;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 import org.antlr.v4.runtime.ANTLRInputStream;
 import org.antlr.v4.runtime.CommonTokenStream;
@@ -34,9 +30,6 @@ public class Sql {
 	       CommonTokenStream tokens =new CommonTokenStream(lexer);
 	       sqlParser parser = new sqlParser(tokens);
 	       ParseTree tree= parser.prog();
-//	       System.out.println(tree.toStringTree(parser));
-//	       Mappingvisitor eval = new Mappingvisitor();  
-//	       eval.visit(tree);  
 	       ParseTreeWalker walker = new  ParseTreeWalker();
 	       MappingListener listen =new MappingListener();
 	       walker.walk(listen,tree); 

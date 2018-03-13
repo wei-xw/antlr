@@ -1,12 +1,8 @@
 package bonc.antlr4;
 
 import java.util.Arrays;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
-import org.antlr.v4.runtime.ParserRuleContext;
-import org.antlr.v4.runtime.tree.ErrorNode;
 import org.antlr.v4.runtime.tree.TerminalNode;
 
 import bonc.antlr4.entity.Column;
@@ -18,6 +14,7 @@ public class ChangeIdentifierField extends sqlBaseListener {
 	public ChangeIdentifierField(List<Column> columnList) {
 		this.columnList = columnList;
 	}
+
 	public void exitIdentifierField(sqlParser.IdentifierFieldContext ctx) {
 		System.out.println(ctx.getText());
 		String field = ctx.IDENTIFIER().getText();
@@ -39,10 +36,11 @@ public class ChangeIdentifierField extends sqlBaseListener {
 		}
 
 	}
+
 	List<String> kwList = Arrays.asList("and", "AND", "or", "OR", "is", "IS", "null", "NULL");
-	@Override
+
 	public void visitTerminal(TerminalNode node) {
-			toExp +=" "+node.getText();
+		toExp += " " + node.getText();
 	}
 
 }
